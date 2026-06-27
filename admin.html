@@ -174,6 +174,13 @@
     .filter-btn.active, .filter-btn:hover {
       background:rgba(255,255,255,0.08); border-color:var(--border-glass-hover); color:var(--text-primary);
     }
+    /* Switch toggle */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ef4444; transition: .4s; border-radius: 34px; }
+    .slider-ball { position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #10b981; }
+    input:checked + .slider .slider-ball { transform: translateX(20px); }
     /* Realtime dot */
     .realtime-dot {
       width:8px; height:8px; border-radius:50%;
@@ -303,9 +310,18 @@
 <!-- Main Content -->
 <main>
   <div class="container">
-    <div class="page-header fade-up">
-      <h1>Admin Dashboard</h1>
-      <p>Manage your products and review customer orders</p>
+    <div class="page-header fade-up" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p>Manage your products and review customer orders</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; background:var(--bg-card); padding:10px 16px; border-radius:var(--radius-lg); border:1px solid var(--border-glass);">
+        <span style="font-weight:600; font-size:0.9rem;" id="shop-status-text">Shop Closed</span>
+        <label class="switch">
+          <input type="checkbox" id="shop-toggle" onchange="toggleShopStatus(event)">
+          <span class="slider"><span class="slider-ball"></span></span>
+        </label>
+      </div>
     </div>
 
     <!-- Stats -->
@@ -431,6 +447,7 @@
   let uploadedImageFile = null;
   let allOrders = [];
   let activeFilter = 'all';
+  let isShopOpen = false;
 
   // Auth guard
   (async () => {
@@ -473,6 +490,8 @@
     loadStats();
     loadProducts();
     subscribeToOrders();
+    fetchShopStatus();
+    subscribeToShopStatus();
   })();
 
   async function logout() {
@@ -913,6 +932,50 @@
     toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span> ${message}`;
     document.getElementById('toast-container').appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
+  }
+
+  async function fetchShopStatus() {
+    const { data } = await _supabase.from('store_settings').select('is_open').eq('id', 'shop_status').single();
+    if (data) {
+      isShopOpen = data.is_open;
+      updateShopToggleUI();
+    }
+  }
+
+  function subscribeToShopStatus() {
+    _supabase
+      .channel('shop-status-admin')
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'store_settings', filter: 'id=eq.shop_status' },
+        ({ new: updated }) => {
+          isShopOpen = updated.is_open;
+          updateShopToggleUI();
+        })
+      .subscribe();
+  }
+
+  function updateShopToggleUI() {
+    const toggle = document.getElementById('shop-toggle');
+    const text = document.getElementById('shop-status-text');
+    if(toggle) toggle.checked = isShopOpen;
+    if(text) {
+      text.textContent = isShopOpen ? 'Shop is Open' : 'Shop Closed';
+      text.style.color = isShopOpen ? '#10b981' : '#ef4444';
+    }
+  }
+
+  async function toggleShopStatus(e) {
+    const newVal = e.target.checked;
+    isShopOpen = newVal;
+    updateShopToggleUI();
+    const { error } = await _supabase.from('store_settings').update({ is_open: newVal }).eq('id', 'shop_status');
+    if (error) {
+      showToast('Failed to update shop status', 'error');
+      isShopOpen = !newVal;
+      updateShopToggleUI();
+    } else {
+      showToast(newVal ? 'Shop is now OPEN' : 'Shop is now CLOSED', 'success');
+    }
   }
 </script>
 </body>

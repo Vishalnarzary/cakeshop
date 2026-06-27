@@ -123,8 +123,8 @@
       background: rgba(255,255,255,0.08);
     }
     .timer-banner {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: #064e3b;
+      border: 1px solid #10b981;
       color: #34d399;
       padding: 12px;
       border-radius: var(--radius-md);
@@ -314,6 +314,13 @@
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) { window.location.href = 'login.html?redirect=buy.html?product=' + productId; return; }
     currentUser = session.user;
+
+    const { data: settings } = await _supabase.from('store_settings').select('is_open').eq('id', 'shop_status').single();
+    if (settings && !settings.is_open) {
+      alert('The shop is currently closed. You cannot place new orders.');
+      window.location.href = 'index.html';
+      return;
+    }
 
     const { data: profile } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).single();
     if (profile?.role === 'admin') { window.location.href = 'admin.html'; return; }

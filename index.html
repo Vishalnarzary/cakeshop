@@ -665,6 +665,7 @@ let currentUser = null;
 let currentRole = null;
 let globalProducts = [];
 let currentLightboxIndex = 0;
+let isShopOpen = true;
 
 async function initAuth() {
   /* Handle pending reservation cancellation from buy.html */
@@ -729,12 +730,33 @@ function subscribeToProductUpdates() {
             : q === 0 ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
             : (isMobile ? 'Buy' : '⚡ Buy Now');
         }
+    .subscribe();
+
+  _supabase
+    .channel('shop-status-realtime')
+    .on('postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'store_settings', filter: 'id=eq.shop_status' },
+      ({ new: updated }) => {
+        isShopOpen = updated.is_open;
+        // Re-render grid to update button states
+        if (globalProducts && globalProducts.length > 0) {
+          const grid = document.getElementById('product-grid');
+          grid.innerHTML = '';
+          globalProducts.forEach((p, i) => grid.appendChild(createProductCard(p, i)));
+        }
+        if (document.getElementById('product-lightbox').classList.contains('active')) {
+          updateLightbox();
+        }
       })
     .subscribe();
 }
 
 async function loadProducts() {
   await _supabase.rpc('cleanup_expired_reservations');
+
+  const { data: settings } = await _supabase
+    .from('store_settings').select('is_open').eq('id', 'shop_status').single();
+  if (settings) isShopOpen = settings.is_open;
 
   const { data: products, error } = await _supabase
     .from('products').select('*').order('created_at', { ascending: false });
@@ -776,11 +798,18 @@ function createProductCard(product, index) {
          style="width:100%;height:100%;object-fit:cover;" />`
     : `<span style="font-size:3rem;">${product.emoji || '📦'}</span>`;
 
-  const canBuy  = currentUser && currentRole !== 'admin' && q > 0;
-  const buyLabel = !currentUser         ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
-                 : currentRole==='admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
-                 : q === 0              ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
-                                        : (isMobile ? 'Buy' : '⚡ Buy Now');
+  const isShopClosed = !isShopOpen;
+  const btnDisabled = isShopClosed ? true : (currentUser ? (currentRole === 'admin' || q === 0) : false);
+
+  let buyLabel = '';
+  if (isShopClosed) {
+    buyLabel = isMobile ? 'Closed' : 'Shop Closed';
+  } else {
+    buyLabel = !currentUser         ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
+               : currentRole==='admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
+               : q === 0              ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
+                                      : (isMobile ? 'Buy' : '⚡ Buy Now');
+  }
 
   div.innerHTML = `
     <div class="product-img ${product.image_url ? '' : 'placeholder'}">
@@ -797,7 +826,7 @@ function createProductCard(product, index) {
           <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
         </div>
         <div class="product-stock-text ${stockClass}">${stockLabel}</div>
-        <button class="btn-buy" onclick="event.stopPropagation(); handleBuy('${product.id}')" ${!canBuy ? 'disabled' : ''}>
+        <button class="btn-buy" onclick="event.stopPropagation(); handleBuy('${product.id}')" ${btnDisabled ? 'disabled' : ''}>
           ${buyLabel}
         </button>
       </div>
@@ -806,6 +835,7 @@ function createProductCard(product, index) {
 }
 
 function handleBuy(productId) {
+  if (!isShopOpen) return;
   if (!currentUser) { window.location.href = 'login.html'; return; }
   window.location.href = `buy.html?product=${productId}`;
 }
@@ -904,13 +934,21 @@ function updateLightbox() {
   stockEl.className = 'product-stock-text ' + (q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock');
   
   const btn = document.getElementById('lightbox-buy-btn');
-  const canBuy = currentUser && currentRole !== 'admin' && q > 0;
-  const buyLabel = !currentUser         ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
-                 : currentRole==='admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
-                 : q === 0              ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
-                                        : (isMobile ? 'Buy' : '⚡ Buy Now');
+  const isShopClosed = !isShopOpen;
+  const btnDisabled = isShopClosed ? true : (currentUser ? (currentRole === 'admin' || q === 0) : false);
+
+  let buyLabel = '';
+  if (isShopClosed) {
+    buyLabel = isMobile ? 'Closed' : 'Shop Closed';
+  } else {
+    buyLabel = !currentUser         ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
+               : currentRole==='admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
+               : q === 0              ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
+                                      : (isMobile ? 'Buy' : '⚡ Buy Now');
+  }
+  
   btn.textContent = buyLabel;
-  btn.disabled = !canBuy;
+  btn.disabled = btnDisabled;
   btn.onclick = (e) => { e.stopPropagation(); handleBuy(p.id); };
 }
 
