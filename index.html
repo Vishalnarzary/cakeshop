@@ -481,8 +481,11 @@ function renderFrame(idx) {
   if (!img) return;
   const cw = canvas.width, ch = canvas.height;
   const iw = img.naturalWidth,  ih = img.naturalHeight;
-  /* object-fit: contain */
-  const scale = Math.min(cw / iw, ch / ih);
+  
+  // Use object-fit: cover (zoomed) on mobile, and contain on desktop
+  const isMobile = window.innerWidth <= 768;
+  const scale = isMobile ? Math.max(cw / iw, ch / ih) : Math.min(cw / iw, ch / ih);
+  
   const dx = (cw - iw * scale) / 2;
   const dy = (ch - ih * scale) / 2;
   ctx.clearRect(0, 0, cw, ch);
