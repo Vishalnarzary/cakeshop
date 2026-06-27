@@ -123,14 +123,18 @@
       background: rgba(255,255,255,0.08);
     }
     .timer-banner {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #f87171;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
       padding: 12px;
       border-radius: var(--radius-md);
       text-align: center;
       font-weight: 700;
       margin-bottom: 24px;
+      position: sticky;
+      top: 64px;
+      z-index: 90;
+      backdrop-filter: blur(8px);
       display: none;
     }
   </style>
@@ -184,7 +188,7 @@
       <!-- Left: Form -->
       <div>
         <div class="timer-banner fade-up" id="timer-banner">
-          ⏳ Stock reserved! Complete checkout in <span id="timer-display">05:00</span>
+          ⏳ Order reserved! Complete checkout in <span id="timer-display">05:00</span>
         </div>
 
         <!-- Product Info -->
