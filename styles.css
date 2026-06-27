@@ -600,12 +600,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 }
 
 .auth-footer a {
-  color: var(--accent-blue-light);
+  color: #ffffff;
   font-weight: 500;
   transition: var(--transition);
 }
 
-.auth-footer a:hover { color: var(--accent-cyan-light); }
+.auth-footer a:hover { color: #cccccc; }
 
 /* --- File Upload --- */
 .file-upload-area {
