@@ -423,7 +423,7 @@
     <div class="page-header fade-up" style="margin-bottom:52px;">
       <span class="section-label">Available Now</span>
       <h1>Our Menu</h1>
-      <p>Browse our current stock and place your order instantly</p>
+      <p>stocks renewed everyday</p>
     </div>
 
     <div id="loading-state" class="loading-state">
@@ -440,6 +440,37 @@
     <div class="product-grid" id="product-grid" style="display:none"></div>
   </div>
 </section>
+
+<!-- Footer -->
+<footer style="padding: 40px 0; border-top: 1px solid var(--border-glass); text-align: center; margin-top: 20px; padding-bottom: 60px;">
+  <div class="container">
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <button class="btn-buy" style="max-width: 200px; width: 100%;" onclick="openContactPopup()">Preorder</button>
+      <button class="btn-secondary" style="max-width: 200px; width: 100%; padding: 12px 24px; border-radius: var(--radius-full); font-weight: 700; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-glass); cursor: pointer;" onclick="openContactPopup()">Contact us</button>
+    </div>
+  </div>
+</footer>
+
+<!-- Contact/Preorder Modal -->
+<div class="modal-overlay" id="contact-modal">
+  <div class="modal proof-lightbox" style="max-width: 400px; text-align: center; margin: 20px;">
+    <div class="modal-header">
+      <h3 style="margin: 0;">How to reach us</h3>
+      <button class="modal-close" onclick="document.getElementById('contact-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body" style="padding: 24px;">
+      <p style="margin-bottom: 24px; color: var(--text-secondary);">There are two ways to preorder or contact us. Simply send us a message saying <strong>"Preorder"</strong>.</p>
+      
+      <a href="https://instagram.com/caramelcakekolkata" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: #fff; padding: 14px 24px; border-radius: var(--radius-lg); font-weight: 700; text-decoration: none; margin-bottom: 16px; transition: transform 0.2s;">
+        📸 Direct message on Instagram
+      </a>
+      
+      <a href="mailto:caramelcakekolkata@gmail.com?subject=Preorder" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: #fff; color: #000; padding: 14px 24px; border-radius: var(--radius-lg); font-weight: 700; text-decoration: none; transition: transform 0.2s;">
+        ✉️ Email Us
+      </a>
+    </div>
+  </div>
+</div>
 
 
 
@@ -1011,6 +1042,10 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === 'ArrowRight') navigateLightbox(1);
   }
 });
+
+function openContactPopup() {
+  document.getElementById('contact-modal').classList.add('open');
+}
 </script>
 
 </body>
