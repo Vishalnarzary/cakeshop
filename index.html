@@ -696,10 +696,12 @@ function subscribeToProductUpdates() {
         const btn = card.querySelector('.btn-buy');
         if (btn) {
           const canBuy = currentUser && currentRole !== 'admin' && q > 0;
+          const isMobile = window.innerWidth <= 768;
           btn.disabled    = !canBuy;
-          btn.textContent = !currentUser ? '🔒 Sign in to Buy'
-            : currentRole === 'admin' ? '🛡️ Admin View'
-            : q === 0 ? '😔 Out of Stock' : '⚡ Buy Now';
+          btn.textContent = !currentUser ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
+            : currentRole === 'admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
+            : q === 0 ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
+            : (isMobile ? 'Buy' : '⚡ Buy Now');
         }
       })
     .subscribe();
@@ -742,10 +744,11 @@ function createProductCard(product, index) {
     : `<span style="font-size:3rem;">${product.emoji || '📦'}</span>`;
 
   const canBuy  = currentUser && currentRole !== 'admin' && q > 0;
-  const buyLabel = !currentUser         ? '🔒 Sign in to Buy'
-                 : currentRole==='admin' ? '🛡️ Admin View'
-                 : q === 0              ? '😔 Out of Stock'
-                                        : '⚡ Buy Now';
+  const isMobile = window.innerWidth <= 768;
+  const buyLabel = !currentUser         ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
+                 : currentRole==='admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
+                 : q === 0              ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
+                                        : (isMobile ? 'Buy' : '⚡ Buy Now');
 
   div.innerHTML = `
     <div class="product-img ${product.image_url ? '' : 'placeholder'}">${imgHtml}</div>
