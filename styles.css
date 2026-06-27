@@ -1084,8 +1084,9 @@ tbody td {
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     padding-bottom: 24px;
-    width: 80%;
-    margin: 0 auto;
+    width: 82%;
+    margin: 0;
+    margin-left: -8px;
   }
   .product-card {
     border-radius: 12px;
