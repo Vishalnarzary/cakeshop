@@ -750,7 +750,6 @@ function createProductCard(product, index) {
     : `<span style="font-size:3rem;">${product.emoji || '📦'}</span>`;
 
   const canBuy  = currentUser && currentRole !== 'admin' && q > 0;
-  const isMobile = window.innerWidth <= 768;
   const buyLabel = !currentUser         ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
                  : currentRole==='admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
                  : q === 0              ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
