@@ -730,6 +730,7 @@ function subscribeToProductUpdates() {
             : q === 0 ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
             : (isMobile ? 'Buy' : '⚡ Buy Now');
         }
+      })
     .subscribe();
 
   _supabase
