@@ -831,6 +831,26 @@ tbody td {
   cursor: pointer;
   transition: var(--transition);
   display: flex; align-items: flex-start; gap: 12px;
+  position: relative;
+}
+
+.delete-address-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.delete-address-btn:hover {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
 }
 
 .address-option:hover {

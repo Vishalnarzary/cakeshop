@@ -569,9 +569,10 @@
           <p style="margin-bottom:4px;">${escHtml(addr.full_address || addr.street || '')}</p>
           <p style="font-size:0.75rem;color:var(--text-muted);">${escHtml(addr.building_floor || '')}</p>
           ${addr.distance
-            ? `<p style="font-size:0.75rem;color:var(--accent-blue-light);margin-top:4px;">📍 ${addr.distance} km from bakery</p>`
+            ? `<p style="font-size:0.75rem;color:#ffffff;margin-top:4px;">📍 ${addr.distance} km from bakery</p>`
             : '<p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">Distance not saved — delivery fee calculated at checkout</p>'}
-        </div>`;
+        </div>
+        <button class="delete-address-btn" onclick="deleteAddress('${addr.id}', event)" title="Delete Address">🗑️</button>`;
       list.appendChild(div);
     });
 
@@ -597,6 +598,31 @@
     selectedDistance = distVal ? parseFloat(distVal) : null;
     validateDeliveryDistance();
     updateSummaryUI();
+  }
+
+  async function deleteAddress(id, event) {
+    event.stopPropagation();
+    if (!confirm('Are you sure you want to delete this address?')) return;
+    
+    // Optimistic UI removal
+    const optDiv = document.getElementById(`addr-opt-${id}`);
+    if (optDiv) optDiv.remove();
+    
+    // Remove from savedAddresses array
+    savedAddresses = savedAddresses.filter(a => a.id !== id);
+    if (savedAddresses.length === 0) {
+      document.getElementById('address-list').style.display = 'none';
+      selectedAddressId = null;
+      selectedDistance = null;
+      validateDeliveryDistance();
+      updateSummaryUI();
+    } else if (selectedAddressId === id) {
+      // If we deleted the selected address, select another one
+      selectAddress(savedAddresses[0].id);
+    }
+    
+    // Remove from DB
+    await _supabase.from('addresses').delete().eq('id', id);
   }
 
   function toggleNewAddress() {
