@@ -1040,9 +1040,38 @@ tbody td {
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
-  .navbar { padding: 0 16px; }
+  .navbar {
+    padding: 0 12px !important;
+  }
+  .navbar-links {
+    position: static !important;
+    transform: none !important;
+    display: flex !important;
+    gap: 12px !important;
+    margin-left: auto !important;
+    margin-right: 12px !important;
+  }
+  .navbar-links a {
+    font-size: 0.78rem !important;
+    padding: 4px 0 !important;
+  }
+  #nav-home {
+    display: none !important; /* Hide home link to save space */
+  }
+  .navbar-user {
+    gap: 8px !important;
+  }
+  #user-name-display {
+    display: none !important; /* Hide username on mobile to prevent overlapping */
+  }
+  .user-badge {
+    gap: 0 !important;
+  }
+  .btn-logout {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+  }
   .container { padding: 0 16px; }
-  .navbar-links a { display: none; }
   .auth-card { padding: 28px 24px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .order-card { grid-template-columns: 1fr; }
