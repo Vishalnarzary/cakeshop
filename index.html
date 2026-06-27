@@ -208,8 +208,24 @@
       pointer-events: none;
     }
 
-    /* Mobile-only background radial dimming overlay */
+    /* Mobile-only tweaks */
     @media (max-width: 768px) {
+      /* Force canvas section to fill exact screen width */
+      .sticky-canvas-wrap {
+        width: 100vw !important;
+        left: 0 !important;
+        right: 0 !important;
+        overflow: hidden !important;
+      }
+      #hero-canvas {
+        width: 100vw !important;
+        height: 100svh !important;
+        left: 0 !important;
+      }
+      /* Hide decorative side bar and frame counter on mobile */
+      .side-progress { display: none !important; }
+      #frame-counter { display: none !important; }
+      /* Radial dimming overlay */
       .sticky-canvas-wrap::after {
         content: '';
         position: absolute;
@@ -760,17 +776,19 @@ function createProductCard(product, index) {
                                         : (isMobile ? 'Buy' : '⚡ Buy Now');
 
   div.innerHTML = `
-    <div class="product-img ${product.image_url ? '' : 'placeholder'}">${imgHtml}</div>
+    <div class="product-img ${product.image_url ? '' : 'placeholder'}" style="position:relative;">
+      ${imgHtml}
+      <div class="product-info-container">
+        <div class="product-info-trigger">i</div>
+        <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
+      </div>
+    </div>
     <div class="product-body">
       <div class="product-left">
         <div class="product-price">₹${Number(product.price).toLocaleString('en-IN')}</div>
         <div class="product-name">${escHtml(product.name)}</div>
       </div>
       <div class="product-right">
-        <div class="product-info-container">
-          <div class="product-info-trigger">i</div>
-          <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
-        </div>
         <div class="product-stock-text ${stockClass}">${stockLabel}</div>
         <button class="btn-buy" onclick="handleBuy('${product.id}')" ${!canBuy ? 'disabled' : ''}>
           ${buyLabel}
