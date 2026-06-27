@@ -259,40 +259,7 @@
       border-radius: 100px;
     }
 
-    /* Floating Order Button */
-    #floating-order-btn {
-      position: fixed;
-      bottom: -80px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99;
-      background: #e79851;
-      color: #050505;
-      border: none;
-      border-radius: 100px;
-      padding: 12px 26px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 10px 30px rgba(231, 152, 81, 0.35), 0 0 25px rgba(0,0,0,0.6);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.3s;
-      outline: none;
-    }
-    #floating-order-btn.show {
-      bottom: 30px;
-    }
-    #floating-order-btn:hover {
-      transform: translateX(-50%) scale(1.05);
-      background: #f1a561;
-      box-shadow: 0 12px 35px rgba(231, 152, 81, 0.45), 0 0 30px rgba(0,0,0,0.7);
-    }
-    #floating-order-btn:active {
-      transform: translateX(-50%) scale(0.95);
-    }
+
 
     /* =============================================================
        RESPONSIVE
@@ -426,8 +393,7 @@
 
 
 
-<!-- Floating Order Now button -->
-<button id="floating-order-btn" onclick="scrollToMenu()">🍰 Order Now</button>
+
 
 <!-- ================================================================
      SCRIPTS
@@ -672,35 +638,7 @@ preloadCriticalFrames().then(() => {
   startAutoPlay();
   /* Simultaneously preload the remaining frames in the background */
   preloadRemainingFrames();
-
-  /* Trigger the floating Order Now button popup after 2 seconds */
-  setTimeout(() => {
-    const btn = document.getElementById('floating-order-btn');
-    if (btn) {
-      btn.classList.add('show');
-      btn.dataset.activated = 'true';
-    }
-  }, 2000);
 });
-
-function scrollToMenu() {
-  const menu = document.getElementById('products-section');
-  if (menu) {
-    menu.scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
-/* Hide floating button when user scrolls down to products menu */
-window.addEventListener('scroll', () => {
-  const btn = document.getElementById('floating-order-btn');
-  if (btn && btn.dataset.activated === 'true') {
-    if (window.scrollY > window.innerHeight * 0.7) {
-      btn.classList.remove('show');
-    } else {
-      btn.classList.add('show');
-    }
-  }
-}, { passive: true });
 
 
 /* ================================================================
