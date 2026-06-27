@@ -690,7 +690,10 @@ function subscribeToProductUpdates() {
         if (!card) return;
         const q = updated.quantity;
         const cls   = q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock';
-        const label = q === 0 ? 'Out of Stock' : q <= 5 ? `Only ${q} left!` : `${q} in stock`;
+        const isMobile = window.innerWidth <= 768;
+        const label = isMobile
+          ? (q === 0 ? 'Sold Out' : `${q} left`)
+          : (q === 0 ? 'Out of Stock' : q <= 5 ? `Only ${q} left!` : `${q} in stock`);
         const badge = card.querySelector('.product-stock-text');
         if (badge) { badge.className = `product-stock-text ${cls}`; badge.textContent = label; }
         const btn = card.querySelector('.btn-buy');
@@ -736,7 +739,10 @@ function createProductCard(product, index) {
 
   const q = product.quantity;
   const stockClass = q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock';
-  const stockLabel = q === 0 ? 'Out of Stock' : q <= 5 ? `Only ${q} left!` : `${q} in stock`;
+  const isMobile = window.innerWidth <= 768;
+  const stockLabel = isMobile
+    ? (q === 0 ? 'Sold Out' : `${q} left`)
+    : (q === 0 ? 'Out of Stock' : q <= 5 ? `Only ${q} left!` : `${q} in stock`);
 
   const imgHtml = product.image_url
     ? `<img src="${product.image_url}" alt="${escHtml(product.name)}"

@@ -1046,52 +1046,81 @@ tbody td {
   /* 3-column mobile product grid */
   .product-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
     padding-bottom: 24px;
   }
   .product-card {
     border-radius: 12px;
+    aspect-ratio: 1 / 1.2;
+    overflow: visible; /* to allow tooltips to show */
   }
   .product-img {
-    height: 110px;
-    padding: 12px;
+    height: 48% !important;
+    padding: 6px !important;
   }
   .product-img img {
-    max-width: 95%;
-    max-height: 95%;
+    max-width: 90%;
+    max-height: 90%;
   }
   .product-body {
-    padding: 10px 10px 14px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-    border-top: none;
+    height: 52% !important;
+    padding: 8px 8px 10px !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 4px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.02) !important;
   }
   .product-left {
-    padding-right: 0;
+    padding-right: 2px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    flex: 1 !important;
   }
   .product-price {
-    font-size: 0.72rem;
+    font-size: 0.65rem !important;
   }
   .product-name {
-    font-size: 0.92rem;
-    margin-top: 2px;
+    font-size: 0.78rem !important;
+    line-height: 1.1 !important;
+    margin-top: 2px !important;
   }
   .product-right {
-    align-items: stretch;
-    gap: 6px;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 2px !important;
   }
   .product-info-container {
-    display: none; /* hide description tooltip on mobile layout */
+    display: block !important;
+    margin-bottom: auto !important;
+  }
+  .product-info-trigger {
+    width: 15px !important;
+    height: 15px !important;
+    font-size: 8px !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+  .product-tooltip {
+    width: 140px !important;
+    padding: 8px 10px !important;
+    font-size: 0.7rem !important;
+    bottom: calc(100% + 8px) !important;
+    border-radius: 8px !important;
   }
   .product-stock-text {
-    font-size: 0.7rem;
-    text-align: left;
+    font-size: 0.62rem !important;
+    text-align: right !important;
+    margin-bottom: 1px !important;
   }
   .btn-buy {
-    width: 100%;
-    padding: 6px 4px;
-    font-size: 0.7rem;
-    border-radius: 4px;
+    width: 100% !important;
+    padding: 5px 4px !important;
+    font-size: 0.65rem !important;
+    border-radius: 4px !important;
   }
 }
