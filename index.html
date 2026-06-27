@@ -240,6 +240,35 @@
       }
     }
 
+    .hero-order-btn {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(255, 255, 255, 0.95);
+      color: #000;
+      padding: 12px 32px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .hero-order-btn:hover {
+      background: #fff;
+      transform: translateX(-50%) translateY(0) scale(1.05);
+    }
+    .hero-order-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+
     /* =============================================================
        PRODUCTS SECTION
     ============================================================= */
@@ -379,6 +408,10 @@
     <!-- Frame counter -->
     <div id="frame-counter">001 / 231</div>
 
+    <!-- Hero Order Button -->
+    <button id="hero-order-btn" class="hero-order-btn" onclick="document.getElementById('products-section').scrollIntoView({ behavior: 'smooth' })">
+      Order Now
+    </button>
   </div><!-- /sticky-canvas-wrap -->
 </div><!-- /scroll-container -->
 
@@ -601,6 +634,16 @@ function updateLayers(progress) {
 
   /* side progress bar */
   document.getElementById('side-fill').style.height = (progress * 100) + '%';
+
+  /* hero order button visibility */
+  const orderBtn = document.getElementById('hero-order-btn');
+  if (orderBtn && typeof orderBtnReady !== 'undefined' && orderBtnReady) {
+    if (progress > 0.95) {
+      orderBtn.classList.remove('visible');
+    } else {
+      orderBtn.classList.add('visible');
+    }
+  }
 }
 
 /* --- Scroll handler --- */
@@ -645,6 +688,12 @@ window.addEventListener('scroll', () => {
 
 /* ---- INIT ---- */
 resizeCanvas();
+
+let orderBtnReady = false;
+setTimeout(() => {
+  orderBtnReady = true;
+  if (typeof onScroll === 'function') requestAnimationFrame(onScroll);
+}, 2000);
 
 /* Start auth + products in parallel with frame preload */
 initAuth();
