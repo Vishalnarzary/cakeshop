@@ -72,7 +72,6 @@
       height: 550vh;
       background: #000;
       max-width: 100vw;
-      overflow-x: hidden;
     }
     .sticky-canvas-wrap {
       position: sticky;
@@ -787,14 +786,14 @@ function createProductCard(product, index) {
         <div class="product-name">${escHtml(product.name)}</div>
       </div>
       <div class="product-right">
+        <div class="product-info-container">
+          <div class="product-info-trigger">i</div>
+          <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
+        </div>
         <div class="product-stock-text ${stockClass}">${stockLabel}</div>
         <button class="btn-buy" onclick="handleBuy('${product.id}')" ${!canBuy ? 'disabled' : ''}>
           ${buyLabel}
         </button>
-      </div>
-      <div class="product-info-container">
-        <div class="product-info-trigger">i</div>
-        <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
       </div>
     </div>`;
   return div;
