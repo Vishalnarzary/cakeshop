@@ -1102,15 +1102,15 @@ tbody td {
   }
   .product-body {
     height: 56% !important;
-    padding: 6px 8px 8px !important;
+    padding: 4px 6px 6px !important;
     flex-direction: column !important;
     justify-content: space-between !important;
     align-items: stretch !important;
-    gap: 4px !important;
+    gap: 2px !important;
     border-top: 1px solid rgba(255, 255, 255, 0.02) !important;
   }
   .product-left {
-    padding-right: 0 !important;
+    padding-right: 14px !important; /* Make room for the 'i' button */
     height: auto !important;
     display: flex !important;
     flex-direction: column !important;
@@ -1119,13 +1119,13 @@ tbody td {
     flex: none !important;
   }
   .product-price {
-    font-size: 0.65rem !important;
+    font-size: 0.6rem !important;
     font-weight: 700 !important;
   }
   .product-name {
-    font-size: 0.78rem !important;
+    font-size: 0.7rem !important;
     line-height: 1.1 !important;
-    margin-top: 2px !important;
+    margin-top: 1px !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
@@ -1141,10 +1141,16 @@ tbody td {
     gap: 4px !important;
     width: 100% !important;
   }
+  .product-info-container {
+    position: absolute !important;
+    top: 4px !important;
+    right: 4px !important;
+    z-index: 10 !important;
+  }
   .product-info-trigger {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 9px !important;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 8px !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     background: rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(4px) !important;
@@ -1157,7 +1163,7 @@ tbody td {
     right: 0 !important;
   }
   .product-stock-text {
-    font-size: 0.62rem !important;
+    font-size: 0.55rem !important;
     text-align: left !important;
     margin-bottom: 0 !important;
     flex-shrink: 0 !important;
@@ -1165,9 +1171,9 @@ tbody td {
   .btn-buy {
     width: auto !important;
     flex: 1 !important;
-    max-width: 60px !important;
-    padding: 4px 0 !important;
-    font-size: 0.62rem !important;
+    max-width: 55px !important;
+    padding: 3px 0 !important;
+    font-size: 0.55rem !important;
     border-radius: 4px !important;
     text-align: center !important;
   }

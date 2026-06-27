@@ -776,14 +776,10 @@ function createProductCard(product, index) {
                                         : (isMobile ? 'Buy' : '⚡ Buy Now');
 
   div.innerHTML = `
-    <div class="product-img ${product.image_url ? '' : 'placeholder'}" style="position:relative;">
+    <div class="product-img ${product.image_url ? '' : 'placeholder'}">
       ${imgHtml}
-      <div class="product-info-container">
-        <div class="product-info-trigger">i</div>
-        <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
-      </div>
     </div>
-    <div class="product-body">
+    <div class="product-body" style="position: relative;">
       <div class="product-left">
         <div class="product-price">₹${Number(product.price).toLocaleString('en-IN')}</div>
         <div class="product-name">${escHtml(product.name)}</div>
@@ -793,6 +789,10 @@ function createProductCard(product, index) {
         <button class="btn-buy" onclick="handleBuy('${product.id}')" ${!canBuy ? 'disabled' : ''}>
           ${buyLabel}
         </button>
+      </div>
+      <div class="product-info-container">
+        <div class="product-info-trigger">i</div>
+        <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
       </div>
     </div>`;
   return div;
