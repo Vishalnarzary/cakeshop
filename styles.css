@@ -1149,11 +1149,10 @@ tbody td {
     width: 100% !important;
   }
   .product-info-container {
-    position: relative !important;
-    top: auto !important;
-    right: auto !important;
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
     display: flex !important;
-    justify-content: flex-end !important;
   }
   .product-info-trigger {
     width: 16px !important;

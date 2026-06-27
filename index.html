@@ -265,7 +265,7 @@
       font-size: 0.68rem;
       letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: #000000;
+      color: #ffffff;
       margin-bottom: 12px;
       font-weight: 700;
       background: rgba(255, 255, 255, 0.16);
@@ -792,7 +792,7 @@ function createProductCard(product, index) {
         <div class="product-name">${escHtml(product.name)}</div>
       </div>
       <div class="product-right">
-        <div class="product-info-container" onclick="event.stopPropagation()">
+        <div class="product-info-container">
           <div class="product-info-trigger">i</div>
           <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
         </div>
@@ -841,7 +841,10 @@ function showToast(message, type = 'info') {
         <div id="lightbox-price" class="lightbox-price">₹0</div>
       </div>
       <p id="lightbox-desc">Description</p>
-      <div id="lightbox-stock" class="product-stock-text" style="margin-top: 12px; font-size: 0.9rem;">In stock</div>
+      <div class="lightbox-footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
+        <div id="lightbox-stock" class="product-stock-text" style="font-size: 0.9rem;">In stock</div>
+        <button id="lightbox-buy-btn" class="btn-buy" style="padding: 8px 18px; font-size: 0.85rem;">Buy Now</button>
+      </div>
     </div>
   </div>
 </div>
@@ -899,6 +902,16 @@ function updateLightbox() {
   const stockEl = document.getElementById('lightbox-stock');
   stockEl.textContent = stockLabel;
   stockEl.className = 'product-stock-text ' + (q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock');
+  
+  const btn = document.getElementById('lightbox-buy-btn');
+  const canBuy = currentUser && currentRole !== 'admin' && q > 0;
+  const buyLabel = !currentUser         ? (isMobile ? '🔒 Sign In' : '🔒 Sign in to Buy')
+                 : currentRole==='admin' ? (isMobile ? '🛡️ Admin' : '🛡️ Admin View')
+                 : q === 0              ? (isMobile ? 'Sold Out' : '😔 Out of Stock')
+                                        : (isMobile ? 'Buy' : '⚡ Buy Now');
+  btn.textContent = buyLabel;
+  btn.disabled = !canBuy;
+  btn.onclick = (e) => { e.stopPropagation(); handleBuy(p.id); };
 }
 
 // Keyboard navigation
