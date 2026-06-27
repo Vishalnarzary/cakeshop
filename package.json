@@ -1,0 +1,8 @@
+{
+  "name": "caramel-cheese-cake",
+  "version": "1.0.0",
+  "description": "Cake Shop static site with Vercel API routes",
+  "dependencies": {
+    "razorpay": "^2.9.4"
+  }
+}

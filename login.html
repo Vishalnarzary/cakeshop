@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cake Shop — Sign In</title>
+  <meta name="description" content="Sign in to your Cake Shop account to browse and purchase products." />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="auth-page">
+  <nav class="navbar" id="navbar">
+  <a class="navbar-brand" href="index.html">
+    <div class="logo-icon">C</div>
+    <span>Caramel</span>
+  </a>
+  </nav>
+  <div class="auth-card fade-up">
+    <div class="auth-logo">
+      <h1>Cake Shop</h1>
+      <p>Sign in to your account</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-user" onclick="switchTab('user')">👤 User Login</button>
+      <button class="auth-tab" id="tab-admin" onclick="switchTab('admin')">🛡️ Admin Login</button>
+    </div>
+
+    <!-- Error / Success -->
+    <div id="auth-error" class="alert alert-error" style="display:none"></div>
+    <div id="auth-success" class="alert alert-success" style="display:none"></div>
+
+    <!-- Login Form -->
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address <span class="required">*</span></label>
+        <input id="email" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password <span class="required">*</span></label>
+        <input id="password" type="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password" />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="btn-submit">
+        <span id="btn-text">Sign In</span>
+      </button>
+    </form>
+
+    <div class="auth-footer" id="user-footer">
+      Don't have an account? <a href="register.html">Create one</a>
+    </div>
+    <div class="auth-footer" id="admin-footer" style="display:none">
+      <span style="color: var(--text-muted);">Admin accounts are managed by the system administrator.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="supabase.js"></script>
+<script>
+  // ---- Navbar Scroll ----
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (navbar && window.scrollY > 10) {
+      navbar.classList.add('scrolled');
+    } else if (navbar) {
+      navbar.classList.remove('scrolled');
+    }
+  });
+
+  const authTabs = document.querySelectorAll('.auth-tab');
+
+  let activeTab = 'user';
+
+  // Redirect if already logged in
+  (async () => {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) {
+      const { data: profile } = await _supabase.from('profiles').select('role').eq('id', session.user.id).single();
+      if (profile?.role === 'admin') window.location.href = 'admin.html';
+      else window.location.href = 'index.html';
+    }
+  })();
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tab-user').classList.toggle('active', tab === 'user');
+    document.getElementById('tab-admin').classList.toggle('active', tab === 'admin');
+    document.getElementById('user-footer').style.display = tab === 'user' ? 'block' : 'none';
+    document.getElementById('admin-footer').style.display = tab === 'admin' ? 'block' : 'none';
+    clearAlerts();
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    clearAlerts();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('btn-submit');
+    const btnText = document.getElementById('btn-text');
+
+    btn.disabled = true;
+    btnText.textContent = 'Signing in...';
+
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      showError(error.message);
+      btn.disabled = false;
+      btnText.textContent = 'Sign In';
+      return;
+    }
+
+    // Fetch profile — auto-upsert if missing (handles manually-created Supabase users)
+    let { data: profile, error: profileError } = await _supabase
+      .from('profiles')
+      .select('role,name')
+      .eq('id', data.user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      // Profile row missing or unreadable — upsert it (ON CONFLICT DO UPDATE avoids duplicate key errors)
+      const inferredRole = activeTab === 'admin' ? 'admin' : 'user';
+      const { data: upserted, error: upsertError } = await _supabase
+        .from('profiles')
+        .upsert(
+          { id: data.user.id, email: email, name: email.split('@')[0], role: inferredRole },
+          { onConflict: 'id' }
+        )
+        .select('role,name')
+        .maybeSingle();
+
+      if (upsertError || !upserted) {
+        // Profile exists in DB but RLS is blocking the read — redirect based on tab
+        showSuccess(`Welcome back! Redirecting...`);
+        setTimeout(() => {
+          window.location.href = activeTab === 'admin' ? 'admin.html' : 'index.html';
+        }, 800);
+        return;
+      }
+      profile = upserted;
+    }
+
+    if (activeTab === 'admin' && profile.role !== 'admin') {
+      showError('Access denied. This account does not have admin privileges.');
+      await _supabase.auth.signOut();
+      btn.disabled = false;
+      btnText.textContent = 'Sign In';
+      return;
+    }
+
+    if (activeTab === 'user' && profile.role === 'admin') {
+      showError('Please use the Admin Login tab for admin accounts.');
+      await _supabase.auth.signOut();
+      btn.disabled = false;
+      btnText.textContent = 'Sign In';
+      return;
+    }
+
+    showSuccess(`Welcome back, ${profile.name || email}!`);
+    setTimeout(() => {
+      if (profile.role === 'admin') window.location.href = 'admin.html';
+      else window.location.href = 'index.html';
+    }, 800);
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.innerHTML = `❌ ${msg}`;
+    el.style.display = 'flex';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('auth-success');
+    el.innerHTML = `✅ ${msg}`;
+    el.style.display = 'flex';
+  }
+
+  function clearAlerts() {
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+</script>
+</body>
+</html>

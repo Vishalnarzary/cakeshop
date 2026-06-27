@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Caramel — Artisan Cheese Cakes, Kolkata</title>
+  <meta name="description" content="Kolkata's finest artisan cheese cakes. Sweetened with natural jaggery and mishri. No refined sugar. Order now." />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+        /* =============================================================
+       LOADING SCREEN
+    ============================================================= */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #050505;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.9s ease, visibility 0.9s ease;
+    }
+    #loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .ls-logo {
+      width: 72px; height: 72px;
+      background: #000000;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; font-weight: 900; color: #fff;
+      animation: lsPulse 2s ease infinite;
+    }
+    @keyframes lsPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.1); }
+      50%      { box-shadow: 0 0 0 24px rgba(255,255,255,0); }
+    }
+    .ls-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .ls-track {
+      width: 180px; height: 2px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 2px; overflow: hidden;
+    }
+    #ls-fill {
+      height: 100%; width: 0;
+      background: #ffffff;
+      border-radius: 2px;
+      transition: width 0.08s linear;
+    }
+    #ls-count {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.18);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* =============================================================
+       SCROLL CONTAINER & STICKY CANVAS
+    ============================================================= */
+    .scroll-container {
+      position: relative;
+      height: 550vh;
+      background: #000;
+    }
+    .sticky-canvas-wrap {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      width: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    #hero-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* =============================================================
+       TEXT LAYERS
+    ============================================================= */
+    .text-layer {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px 32px; /* safe zone px-8 equivalent */
+      pointer-events: none;
+      opacity: 0;
+      z-index: 2;
+      will-change: opacity, transform;
+    }
+    @media (max-width: 768px) {
+      .text-layer {
+        justify-content: flex-start;
+        padding-top: 20svh; /* shift slightly higher on mobile */
+      }
+    }
+    .tl-eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #000000;
+      margin-bottom: 20px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px 6px 16px;
+      border-radius: 100px;
+      display: inline-block;
+    }
+    .tl-heading {
+      font-size: clamp(3.2rem, 10vw, 9.5rem);
+      font-weight: 900;
+      letter-spacing: -0.045em;
+      line-height: 0.9; /* Set line-height to 0.9 for aggressive sporty look */
+      color: #fff;
+      margin: 0 0 20px;
+      filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); /* Enhanced contrast shadow */
+    }
+    .tl-heading .grad {
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tl-sub {
+      font-size: clamp(0.875rem, 1.8vw, 1.1rem);
+      color: rgba(255,255,255,0.4);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      max-width: 420px;
+      line-height: 1.6;
+    }
+
+    /* Scroll hint */
+    .scroll-hint {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .scroll-hint-text {
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+    }
+    .scroll-hint-arrow {
+      animation: shBounce 1.8s ease infinite;
+    }
+    @keyframes shBounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(7px); }
+    }
+
+    /* Side progress bar */
+    .side-progress {
+      position: absolute;
+      right: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2px;
+      height: 100px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 2px;
+    }
+    #side-fill {
+      width: 100%;
+      height: 0%;
+      background: #ffffff;
+      border-radius: 2px;
+      transition: height 0.08s linear;
+    }
+
+    /* Frame counter (tiny, bottom-left) */
+    #frame-counter {
+      position: absolute;
+      bottom: 20px;
+      left: 24px;
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.12);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.1em;
+      pointer-events: none;
+    }
+
+    /* Mobile-only background radial dimming overlay */
+    @media (max-width: 768px) {
+      .sticky-canvas-wrap::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.4) 80%);
+        pointer-events: none;
+        z-index: 1;
+      }
+      #hero-canvas {
+        z-index: 0;
+      }
+    }
+
+    /* =============================================================
+       PRODUCTS SECTION
+    ============================================================= */
+    #products-section {
+      background: var(--bg-primary);
+      padding: 100px 0 80px;
+      opacity: 0;
+      transform: translateY(50px);
+      transition: opacity 1s cubic-bezier(0.25,1,0.5,1),
+                  transform 1s cubic-bezier(0.25,1,0.5,1);
+    }
+    @media (max-width: 768px) {
+      #products-section {
+        padding: 96px 0 80px; /* py-24 equivalent on mobile */
+      }
+    }
+    #products-section.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .section-label {
+      display: inline-block;
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #000000;
+      margin-bottom: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px 6px 16px;
+      border-radius: 100px;
+    }
+
+    /* =============================================================
+       RESPONSIVE
+    ============================================================= */
+    @media (max-width: 600px) {
+      .tl-heading { letter-spacing: -0.03em; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     LOADING SCREEN
+================================================================ -->
+<div id="loading-screen">
+  <div class="ls-logo">C</div>
+  <div class="ls-label">Preparing your experience</div>
+  <div class="ls-track"><div id="ls-fill"></div></div>
+  <div id="ls-count">0 / 231</div>
+</div>
+
+<!-- ================================================================
+     NAVBAR
+================================================================ -->
+<nav class="navbar" id="navbar">
+  <a class="navbar-brand" href="index.html">
+    <div class="logo-icon">C</div>
+    <span>Caramel</span>
+  </a>
+  <div class="navbar-links">
+    <a href="index.html" class="active" id="nav-home">Home</a>
+    <a href="orders.html" id="nav-orders" style="display:none">My Orders</a>
+    <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
+  </div>
+  <div class="navbar-user">
+    <div id="user-info" style="display:none" class="user-badge">
+      <div class="avatar" id="user-avatar">U</div>
+      <span id="user-name-display"></span>
+    </div>
+    <button class="btn-logout" id="btn-logout" style="display:none" onclick="logout()">Sign Out</button>
+    <a href="login.html" id="btn-login" class="btn btn-primary btn-sm">Sign In</a>
+  </div>
+</nav>
+
+<!-- ================================================================
+     TOAST
+================================================================ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ================================================================
+     SECTION 1 — SCROLLYTELLING CANVAS
+================================================================ -->
+<div class="scroll-container" id="scroll-container">
+  <div class="sticky-canvas-wrap" id="sticky-wrap">
+
+    <canvas id="hero-canvas"></canvas>
+
+    <!-- Chapter 1 (0 – 25%) — Brand intro -->
+    <div class="text-layer" id="tl-1">
+      <span class="tl-eyebrow">Kolkata's Finest</span>
+      <h2 class="tl-heading"><span class="grad">Caramel</span></h2>
+      <p class="tl-sub">Cheese Cakes</p>
+    </div>
+
+    <!-- Chapter 2 (25 – 50%) — The craft -->
+    <div class="text-layer" id="tl-2">
+      <span class="tl-eyebrow">The Craft</span>
+      <h2 class="tl-heading"><span class="grad">Handcrafted</span></h2>
+      <p class="tl-sub">Every layer built with precision and quiet devotion</p>
+    </div>
+
+    <!-- Chapter 3 (50 – 75%) — Purity -->
+    <div class="text-layer" id="tl-3">
+      <span class="tl-eyebrow">Our Ingredients</span>
+      <h2 class="tl-heading"><span class="grad">Pure</span></h2>
+      <p class="tl-sub">No artificial flavors. No shortcuts. No compromises.</p>
+    </div>
+
+    <!-- Chapter 4 (75 – 100%) — Sugar free promise -->
+    <div class="text-layer" id="tl-4">
+      <span class="tl-eyebrow">Our Promise</span>
+      <h2 class="tl-heading"><span class="grad">Natural</span></h2>
+      <p class="tl-sub">Sweetened with jaggery &amp; mishri — never refined sugar</p>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" id="scroll-hint">
+      <span class="scroll-hint-text">Scroll</span>
+      <svg class="scroll-hint-arrow" width="14" height="20" viewBox="0 0 14 20" fill="none">
+        <path d="M7 1v14M1 10l6 8 6-8" stroke="rgba(255,255,255,0.3)"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Side progress -->
+    <div class="side-progress">
+      <div id="side-fill"></div>
+    </div>
+
+    <!-- Frame counter -->
+    <div id="frame-counter">001 / 231</div>
+
+  </div><!-- /sticky-canvas-wrap -->
+</div><!-- /scroll-container -->
+
+<!-- ================================================================
+     SECTION 2 — PRODUCTS
+================================================================ -->
+<section id="products-section">
+  <div class="container">
+    <div class="page-header fade-up" style="margin-bottom:52px;">
+      <span class="section-label">Available Now</span>
+      <h1>Our Menu</h1>
+      <p>Browse our current stock and place your order instantly</p>
+    </div>
+
+    <div id="loading-state" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading products…</p>
+    </div>
+
+    <div id="empty-state" class="empty-state" style="display:none">
+      <div class="empty-icon">📦</div>
+      <h3>No products yet</h3>
+      <p>Check back later or ask the admin to add products</p>
+    </div>
+
+    <div class="product-grid" id="product-grid" style="display:none"></div>
+  </div>
+</section>
+
+
+
+<!-- ================================================================
+     SCRIPTS
+================================================================ -->
+<script src="supabase.js"></script>
+<script>
+'use strict';
+
+/* ================================================================
+   SCROLLYTELLING ENGINE
+================================================================ */
+const TOTAL_FRAMES = 231;
+const frames       = new Array(TOTAL_FRAMES).fill(null);
+let loadedCount    = 0;
+let currentFrameIdx = -1;
+let rafPending     = false;
+
+/* Auto-play state */
+const AUTOPLAY_TARGET = 57;        // 0-indexed → shows frame 58
+const AUTOPLAY_MS     = 2800;      // duration of the intro animation
+let   autoPlaying     = false;     // true while intro is running
+let   autoPlayDone    = false;     // true after intro finishes
+
+function frameUrl(i) {
+  return `frames/ezgif-frame-${String(i + 1).padStart(3, '0')}.jpg`;
+}
+
+/* --- Loading UI --- */
+function setLoadingProgress(n) {
+  const pct = n / TOTAL_FRAMES * 100;
+  document.getElementById('ls-fill').style.width  = pct + '%';
+  document.getElementById('ls-count').textContent = n + ' / ' + TOTAL_FRAMES;
+}
+
+function hideLoadingScreen() {
+  document.getElementById('loading-screen').classList.add('hidden');
+  setTimeout(() => {
+    const el = document.getElementById('loading-screen');
+    if (el) el.remove();
+  }, 1000);
+}
+
+/* --- Preload --- */
+function preloadFrames() {
+  return new Promise(resolve => {
+    let done = false;
+    frames.forEach((_, i) => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        if (img.complete && img.naturalWidth > 0) frames[i] = img;
+        loadedCount++;
+        setLoadingProgress(loadedCount);
+        if (loadedCount === TOTAL_FRAMES && !done) {
+          done = true; resolve();
+        }
+      };
+      img.src = frameUrl(i);
+    });
+  });
+}
+
+/* --- Canvas --- */
+const canvas = document.getElementById('hero-canvas');
+const ctx    = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  if (currentFrameIdx >= 0) renderFrame(currentFrameIdx);
+}
+
+function renderFrame(idx) {
+  const img = frames[idx];
+  if (!img) return;
+  const cw = canvas.width, ch = canvas.height;
+  const iw = img.naturalWidth,  ih = img.naturalHeight;
+  /* object-fit: contain */
+  const scale = Math.min(cw / iw, ch / ih);
+  const dx = (cw - iw * scale) / 2;
+  const dy = (ch - ih * scale) / 2;
+  ctx.clearRect(0, 0, cw, ch);
+  ctx.drawImage(img, dx, dy, iw * scale, ih * scale);
+}
+
+function drawFrame(idx) {
+  if (idx === currentFrameIdx) return;
+  currentFrameIdx = idx;
+  renderFrame(idx);
+  document.getElementById('frame-counter').textContent =
+    String(idx + 1).padStart(3,'0') + ' / 231';
+}
+
+/* ---- Auto-play intro (frames 0 → AUTOPLAY_TARGET on load) ---- */
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function startAutoPlay() {
+  autoPlaying = true;
+  const start = performance.now();
+
+  function tick(now) {
+    if (!autoPlaying) return;
+
+    const raw    = Math.min(1, (now - start) / AUTOPLAY_MS);
+    const eased  = easeInOutCubic(raw);
+    const fIdx   = Math.min(AUTOPLAY_TARGET, Math.floor(eased * (AUTOPLAY_TARGET + 1)));
+    const prog   = eased * (AUTOPLAY_TARGET / TOTAL_FRAMES); // progress within full range
+
+    // Force-draw even if same idx on first call
+    currentFrameIdx = -1;
+    drawFrame(fIdx);
+    updateLayers(prog);
+
+    if (raw < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      /* Intro complete — silently reposition scroll so onScroll picks up from frame 57 */
+      autoPlaying = false;
+      autoPlayDone = true;
+
+      const cont       = document.getElementById('scroll-container');
+      const scrollable = cont.offsetHeight - window.innerHeight;
+      const targetY    = (AUTOPLAY_TARGET / TOTAL_FRAMES) * scrollable;
+
+      /* Use instant scroll — canvas already shows the right frame */
+      window.scrollTo({ top: targetY, behavior: 'instant' });
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+/* --- Text layer opacity engine --- */
+const tlEls = [
+  document.getElementById('tl-1'),
+  document.getElementById('tl-2'),
+  document.getElementById('tl-3'),
+  document.getElementById('tl-4'),
+];
+
+/* [fadeInStart, fullVisible, startFadeOut, fullOut] — all in scroll-progress 0-1 */
+const CHAPTERS = [
+  [0.00, 0.05, 0.28, 0.35],
+  [0.35, 0.40, 0.50, 0.57],
+  [0.57, 0.62, 0.72, 0.79],
+  [0.79, 0.84, 0.94, 1.00],
+];
+
+function remap(v, a, b) { return Math.max(0, Math.min(1, (v - a) / (b - a))); }
+
+function updateLayers(progress) {
+  CHAPTERS.forEach(([i0, i1, o0, o1], idx) => {
+    let op = 0;
+    if (progress > i0 && progress < o1) {
+      if      (progress < i1) op = remap(progress, i0, i1);
+      else if (progress < o0) op = 1;
+      else                    op = 1 - remap(progress, o0, o1);
+    }
+    const ty = progress < i1
+      ? 28 * (1 - remap(progress, i0, i1))
+      : 0;
+    tlEls[idx].style.opacity   = op;
+    tlEls[idx].style.transform = `translateY(${ty}px)`;
+  });
+
+  /* scroll hint */
+  document.getElementById('scroll-hint').style.opacity =
+    progress < 0.04 ? 1 : 0;
+
+  /* side progress bar */
+  document.getElementById('side-fill').style.height = (progress * 100) + '%';
+}
+
+/* --- Scroll handler --- */
+function onScroll() {
+  /* Block scroll-driven updates while the intro auto-play is running */
+  if (autoPlaying) { rafPending = false; return; }
+
+  const cont  = document.getElementById('scroll-container');
+  const top   = cont.getBoundingClientRect().top;
+  const scrolled   = -top;
+  const scrollable = cont.offsetHeight - window.innerHeight;
+  const progress   = Math.max(0, Math.min(1, scrolled / scrollable));
+
+  const frameIdx = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * TOTAL_FRAMES));
+  drawFrame(frameIdx);
+  updateLayers(progress);
+  rafPending = false;
+}
+
+window.addEventListener('scroll', () => {
+  if (!rafPending) {
+    rafPending = true;
+    requestAnimationFrame(onScroll);
+  }
+}, { passive: true });
+
+window.addEventListener('resize', () => { resizeCanvas(); onScroll(); });
+
+/* Reveal products section when it enters viewport */
+const productsSection = document.getElementById('products-section');
+new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    productsSection.classList.add('revealed');
+  }
+}, { threshold: 0.04 }).observe(productsSection);
+
+/* Navbar scroll tint */
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  nav.classList.toggle('scrolled', window.scrollY > 10);
+}, { passive: true });
+
+/* ---- INIT ---- */
+resizeCanvas();
+
+/* Start auth + products in parallel with frame preload */
+initAuth();
+
+preloadFrames().then(() => {
+  hideLoadingScreen();
+  /* After loading screen fades, play intro animation to frame 58 */
+  startAutoPlay();
+});
+
+
+/* ================================================================
+   AUTH & PRODUCTS
+================================================================ */
+let currentUser = null;
+let currentRole = null;
+
+async function initAuth() {
+  /* Handle pending reservation cancellation from buy.html */
+  const pendingCancel = sessionStorage.getItem('pending_cancel');
+  if (pendingCancel) {
+    sessionStorage.removeItem('pending_cancel');
+    sessionStorage.removeItem('active_reservation');
+    try {
+      const { user_id, product_id } = JSON.parse(pendingCancel);
+      await _supabase.rpc('cancel_reservation', { p_user_id: user_id, p_product_id: product_id });
+    } catch (_) {}
+  }
+
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    const { data: profile } = await _supabase
+      .from('profiles').select('*').eq('id', currentUser.id).single();
+    if (profile) {
+      currentRole = profile.role;
+      document.getElementById('user-info').style.display        = 'flex';
+      document.getElementById('user-name-display').textContent  = profile.name || profile.email;
+      document.getElementById('user-avatar').textContent        = (profile.name || profile.email)[0].toUpperCase();
+      document.getElementById('btn-login').style.display        = 'none';
+      document.getElementById('btn-logout').style.display       = 'block';
+      document.getElementById('nav-orders').style.display       = 'block';
+      if (currentRole === 'admin') document.getElementById('nav-admin').style.display = 'block';
+    }
+  }
+  loadProducts();
+}
+
+async function logout() {
+  await _supabase.auth.signOut();
+  window.location.reload();
+}
+
+/* ---- Realtime stock updates ---- */
+function subscribeToProductUpdates() {
+  _supabase
+    .channel('products-realtime')
+    .on('postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'products' },
+      ({ new: updated }) => {
+        const card = document.querySelector(`[data-product-id="${updated.id}"]`);
+        if (!card) return;
+        const q = updated.quantity;
+        const cls   = q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock';
+        const label = q === 0 ? 'Out of Stock' : q <= 5 ? `Only ${q} left!` : `${q} in stock`;
+        const badge = card.querySelector('.product-stock-text');
+        if (badge) { badge.className = `product-stock-text ${cls}`; badge.textContent = label; }
+        const btn = card.querySelector('.btn-buy');
+        if (btn) {
+          const canBuy = currentUser && currentRole !== 'admin' && q > 0;
+          btn.disabled    = !canBuy;
+          btn.textContent = !currentUser ? '🔒 Sign in to Buy'
+            : currentRole === 'admin' ? '🛡️ Admin View'
+            : q === 0 ? '😔 Out of Stock' : '⚡ Buy Now';
+        }
+      })
+    .subscribe();
+}
+
+async function loadProducts() {
+  await _supabase.rpc('cleanup_expired_reservations');
+
+  const { data: products, error } = await _supabase
+    .from('products').select('*').order('created_at', { ascending: false });
+
+  document.getElementById('loading-state').style.display = 'none';
+
+  if (error || !products || products.length === 0) {
+    document.getElementById('empty-state').style.display = 'block';
+    return;
+  }
+
+  const grid = document.getElementById('product-grid');
+  grid.style.display = 'grid';
+  grid.innerHTML     = '';
+  products.forEach((p, i) => grid.appendChild(createProductCard(p, i)));
+  subscribeToProductUpdates();
+}
+
+function createProductCard(product, index) {
+  const div = document.createElement('div');
+  div.className = 'product-card fade-up';
+  div.style.animationDelay = `${index * 0.08}s`;
+  div.style.opacity = '0';
+  div.dataset.productId = product.id;
+
+  const q = product.quantity;
+  const stockClass = q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock';
+  const stockLabel = q === 0 ? 'Out of Stock' : q <= 5 ? `Only ${q} left!` : `${q} in stock`;
+
+  const imgHtml = product.image_url
+    ? `<img src="${product.image_url}" alt="${escHtml(product.name)}"
+         style="width:100%;height:100%;object-fit:cover;" />`
+    : `<span style="font-size:3rem;">${product.emoji || '📦'}</span>`;
+
+  const canBuy  = currentUser && currentRole !== 'admin' && q > 0;
+  const buyLabel = !currentUser         ? '🔒 Sign in to Buy'
+                 : currentRole==='admin' ? '🛡️ Admin View'
+                 : q === 0              ? '😔 Out of Stock'
+                                        : '⚡ Buy Now';
+
+  div.innerHTML = `
+    <div class="product-img ${product.image_url ? '' : 'placeholder'}">${imgHtml}</div>
+    <div class="product-body">
+      <div class="product-left">
+        <div class="product-price">₹${Number(product.price).toLocaleString('en-IN')}</div>
+        <div class="product-name">${escHtml(product.name)}</div>
+      </div>
+      <div class="product-right">
+        <div class="product-info-container">
+          <div class="product-info-trigger">i</div>
+          <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
+        </div>
+        <div class="product-stock-text ${stockClass}">${stockLabel}</div>
+        <button class="btn-buy" onclick="handleBuy('${product.id}')" ${!canBuy ? 'disabled' : ''}>
+          ${buyLabel}
+        </button>
+      </div>
+    </div>`;
+  return div;
+}
+
+function handleBuy(productId) {
+  if (!currentUser) { window.location.href = 'login.html'; return; }
+  window.location.href = `buy.html?product=${productId}`;
+}
+
+function escHtml(str) {
+  return String(str||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(message, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span> ${message}`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+</body>
+</html>
