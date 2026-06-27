@@ -663,6 +663,8 @@ preloadCriticalFrames().then(() => {
 ================================================================ */
 let currentUser = null;
 let currentRole = null;
+let globalProducts = [];
+let currentLightboxIndex = 0;
 
 async function initAuth() {
   /* Handle pending reservation cancellation from buy.html */
@@ -743,6 +745,8 @@ async function loadProducts() {
     document.getElementById('empty-state').style.display = 'block';
     return;
   }
+  
+  globalProducts = products;
 
   const grid = document.getElementById('product-grid');
   grid.style.display = 'grid';
@@ -756,7 +760,9 @@ function createProductCard(product, index) {
   div.className = 'product-card fade-up';
   div.style.animationDelay = `${index * 0.08}s`;
   div.style.opacity = '0';
+  div.style.cursor = 'pointer';
   div.dataset.productId = product.id;
+  div.onclick = () => openLightbox(index);
 
   const q = product.quantity;
   const stockClass = q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock';
@@ -786,12 +792,12 @@ function createProductCard(product, index) {
         <div class="product-name">${escHtml(product.name)}</div>
       </div>
       <div class="product-right">
-        <div class="product-info-container">
+        <div class="product-info-container" onclick="event.stopPropagation()">
           <div class="product-info-trigger">i</div>
           <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
         </div>
         <div class="product-stock-text ${stockClass}">${stockLabel}</div>
-        <button class="btn-buy" onclick="handleBuy('${product.id}')" ${!canBuy ? 'disabled' : ''}>
+        <button class="btn-buy" onclick="event.stopPropagation(); handleBuy('${product.id}')" ${!canBuy ? 'disabled' : ''}>
           ${buyLabel}
         </button>
       </div>
@@ -818,5 +824,93 @@ function showToast(message, type = 'info') {
   setTimeout(() => t.remove(), 4000);
 }
 </script>
+
+<!-- Lightbox Overlay -->
+<div id="product-lightbox" class="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <div class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); navigateLightbox(-1)">&#10094;</div>
+  <div class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); navigateLightbox(1)">&#10095;</div>
+  
+  <div class="lightbox-content" onclick="event.stopPropagation()">
+    <div class="lightbox-img-wrapper">
+      <img id="lightbox-img" src="" alt="Product" />
+    </div>
+    <div class="lightbox-details">
+      <div class="lightbox-header">
+        <h2 id="lightbox-title">Product Name</h2>
+        <div id="lightbox-price" class="lightbox-price">₹0</div>
+      </div>
+      <p id="lightbox-desc">Description</p>
+      <div id="lightbox-stock" class="product-stock-text" style="margin-top: 12px; font-size: 0.9rem;">In stock</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Lightbox logic
+function openLightbox(index) {
+  if (!globalProducts || globalProducts.length === 0) return;
+  currentLightboxIndex = index;
+  updateLightbox();
+  const lb = document.getElementById('product-lightbox');
+  lb.style.display = 'flex';
+  // Small delay to allow display: flex to apply before transitioning opacity
+  setTimeout(() => lb.classList.add('active'), 10);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('product-lightbox');
+  lb.classList.remove('active');
+  setTimeout(() => lb.style.display = 'none', 300); // Wait for transition
+  document.body.style.overflow = '';
+}
+
+function navigateLightbox(direction) {
+  if (!globalProducts || globalProducts.length === 0) return;
+  currentLightboxIndex += direction;
+  if (currentLightboxIndex < 0) currentLightboxIndex = globalProducts.length - 1;
+  if (currentLightboxIndex >= globalProducts.length) currentLightboxIndex = 0;
+  updateLightbox();
+}
+
+function updateLightbox() {
+  const p = globalProducts[currentLightboxIndex];
+  if (!p) return;
+  
+  const img = document.getElementById('lightbox-img');
+  if (p.image_url) {
+    img.src = p.image_url;
+    img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+  }
+  
+  document.getElementById('lightbox-title').textContent = p.name || '';
+  document.getElementById('lightbox-price').textContent = '₹' + Number(p.price || 0).toLocaleString('en-IN');
+  document.getElementById('lightbox-desc').textContent = p.description || 'Artisan handcrafted recipe.';
+  
+  const q = p.quantity;
+  const isMobile = window.innerWidth <= 768;
+  const stockLabel = isMobile
+    ? (q === 0 ? 'Sold Out' : `${q} left`)
+    : (q === 0 ? 'Out of Stock' : q <= 5 ? `Only ${q} left!` : `${q} in stock`);
+  
+  const stockEl = document.getElementById('lightbox-stock');
+  stockEl.textContent = stockLabel;
+  stockEl.className = 'product-stock-text ' + (q === 0 ? 'out-of-stock' : q <= 5 ? 'low-stock' : 'in-stock');
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  const lb = document.getElementById('product-lightbox');
+  if (lb && lb.classList.contains('active')) {
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowLeft') navigateLightbox(-1);
+    else if (e.key === 'ArrowRight') navigateLightbox(1);
+  }
+});
+</script>
+
 </body>
 </html>
