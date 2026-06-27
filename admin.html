@@ -360,6 +360,7 @@
     <div class="admin-tabs fade-up">
       <button class="admin-tab active" id="tab-products" onclick="showTab('products')">📦 Products</button>
       <button class="admin-tab" id="tab-orders" onclick="showTab('orders')">🛒 Orders</button>
+      <button class="admin-tab" id="tab-discounts" onclick="showTab('discounts')">🏷️ Discounts</button>
     </div>
 
     <!-- Products Tab -->
@@ -425,6 +426,45 @@
           <div></div>
         </div>
         <div id="orders-list"></div>
+      </div>
+    </div>
+
+    <!-- Discounts Tab -->
+    <div id="panel-discounts" style="display:none">
+      <div class="section-header fade-up">
+        <h2>Discount Codes</h2>
+        <span style="font-size:0.8rem;color:var(--text-secondary);">Manage codes and flat discount amounts</span>
+      </div>
+
+      <div style="background:var(--bg-card); padding:24px; border-radius:var(--radius-lg); border:1px solid var(--border-glass); margin-bottom: 24px;" class="fade-up">
+        <h3 style="margin-top:0; margin-bottom:16px;">Add New Discount Code</h3>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
+          <div class="form-group" style="flex:1; min-width:200px; margin-bottom: 0;">
+            <label class="form-label">Code (max 10 chars)</label>
+            <input type="text" id="new-discount-code" class="form-control" maxlength="10" style="text-transform:uppercase;" placeholder="e.g. SAVE50">
+          </div>
+          <div class="form-group" style="flex:1; min-width:200px; margin-bottom: 0;">
+            <label class="form-label">Discount Amount (₹)</label>
+            <input type="number" id="new-discount-amount" class="form-control" min="1" placeholder="e.g. 50">
+          </div>
+          <button class="btn btn-primary" onclick="addDiscount()" style="height: 48px;">+ Add Code</button>
+        </div>
+      </div>
+
+      <div id="discounts-loading" class="loading-state" style="display:none;"><div class="spinner"></div></div>
+      <div id="discounts-empty" class="empty-state" style="display:none">
+        <div class="empty-icon">🏷️</div>
+        <h3>No discount codes</h3>
+        <p>Create a code above to offer discounts to your customers.</p>
+      </div>
+
+      <div class="table-wrap fade-up" id="discounts-table-wrap" style="display:none">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px 16px; border-bottom: 1px solid var(--border-glass); font-weight: 700; color: var(--text-secondary); font-size: 0.85rem;">
+          <div>Code</div>
+          <div>Amount (₹)</div>
+          <div style="text-align:right;">Action</div>
+        </div>
+        <div id="discounts-list"></div>
       </div>
     </div>
 
@@ -526,11 +566,12 @@
 
   // ---- Tabs ----
   function showTab(tab) {
-    ['products', 'orders'].forEach(t => {
+    ['products', 'orders', 'discounts'].forEach(t => {
       document.getElementById(`panel-${t}`).style.display = t === tab ? 'block' : 'none';
       document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     });
     if (tab === 'orders') loadOrders();
+    if (tab === 'discounts') loadDiscounts();
   }
 
   // ---- Products ----
@@ -976,6 +1017,68 @@
     } else {
       showToast(newVal ? 'Shop is now OPEN' : 'Shop is now CLOSED', 'success');
     }
+  }
+  // ---- Discounts ----
+  async function loadDiscounts() {
+    document.getElementById('discounts-loading').style.display = 'block';
+    document.getElementById('discounts-empty').style.display = 'none';
+    document.getElementById('discounts-table-wrap').style.display = 'none';
+    
+    const { data: discounts, error } = await _supabase.from('discount_codes').select('*').order('created_at', { ascending: false });
+    
+    document.getElementById('discounts-loading').style.display = 'none';
+    
+    if (error || !discounts || discounts.length === 0) {
+      document.getElementById('discounts-empty').style.display = 'block';
+      return;
+    }
+    
+    document.getElementById('discounts-table-wrap').style.display = 'block';
+    const list = document.getElementById('discounts-list');
+    list.innerHTML = '';
+    
+    discounts.forEach(d => {
+      const row = document.createElement('div');
+      row.style.display = 'grid';
+      row.style.gridTemplateColumns = '2fr 1fr 1fr';
+      row.style.padding = '16px';
+      row.style.borderBottom = '1px solid var(--border-glass)';
+      row.style.alignItems = 'center';
+      
+      row.innerHTML = `
+        <div style="font-family: monospace; font-size: 1.1rem; font-weight: 700; letter-spacing: 1px;">${escHtml(d.code)}</div>
+        <div style="color: var(--success); font-weight: 700;">-₹${d.amount}</div>
+        <div style="text-align: right;">
+          <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem; color: var(--danger); border-color: rgba(239,68,68,0.3);" onclick="deleteDiscount('${escHtml(d.code)}')">Remove</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  async function addDiscount() {
+    const code = document.getElementById('new-discount-code').value.trim().toUpperCase();
+    const amount = parseInt(document.getElementById('new-discount-amount').value, 10);
+    
+    if (!code || code.length > 10) { showToast('Please enter a valid code', 'error'); return; }
+    if (!amount || amount <= 0) { showToast('Please enter a valid amount', 'error'); return; }
+    
+    const { error } = await _supabase.from('discount_codes').insert({ code, amount });
+    if (error) {
+      showToast(error.message, 'error');
+    } else {
+      showToast('Discount code added', 'success');
+      document.getElementById('new-discount-code').value = '';
+      document.getElementById('new-discount-amount').value = '';
+      loadDiscounts();
+    }
+  }
+
+  async function deleteDiscount(code) {
+    if (!confirm(`Delete discount code ${code}?`)) return;
+    const { error } = await _supabase.from('discount_codes').delete().eq('code', code);
+    if (error) showToast(error.message, 'error');
+    else { showToast('Code deleted', 'success'); loadDiscounts(); }
   }
 </script>
 </body>

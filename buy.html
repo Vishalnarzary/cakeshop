@@ -272,6 +272,17 @@
           <span class="value" id="summary-delivery" style="color:var(--success);">—</span>
         </div>
         <div class="divider"></div>
+        <div class="summary-row" id="discount-row" style="display:none;">
+          <span class="label">Discount (<span id="summary-discount-code"></span>)</span>
+          <span class="value" id="summary-discount-amount" style="color:var(--success);">—</span>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="discount-input" class="form-control" style="text-transform:uppercase; font-size:0.875rem;" placeholder="Discount code">
+            <button class="btn btn-secondary" style="padding:0 16px; font-size:0.875rem;" onclick="applyDiscount()">Apply</button>
+          </div>
+          <div id="discount-message" style="font-size:0.75rem; margin-top:8px;"></div>
+        </div>
         <div class="summary-row total">
           <span class="label" style="font-weight:700;font-size:1rem;">Total</span>
           <span class="value" id="summary-total">—</span>
@@ -303,6 +314,8 @@
   let searchTimeout = null;
   let countdownInterval = null;
   let reservationExpiresAt = null; // absolute timestamp in ms (Date.now() based)
+  let appliedDiscountCode = null;
+  let appliedDiscountAmount = 0;
 
   const params = new URLSearchParams(window.location.search);
   const productId = params.get('product');
@@ -403,7 +416,8 @@
   function updateSummaryUI() {
     const price = Number(product.price);
     const fee = calcDeliveryFee(selectedDistance);
-    const total = price + fee;
+    let total = price + fee - appliedDiscountAmount;
+    if (total < 0) total = 0;
 
     document.getElementById('summary-price').textContent = `₹${price.toLocaleString('en-IN')}`;
 
@@ -414,6 +428,14 @@
     } else {
       deliveryEl.textContent = `₹${fee.toLocaleString('en-IN')}`;
       deliveryEl.style.color = 'var(--text-primary)';
+    }
+    
+    if (appliedDiscountAmount > 0) {
+      document.getElementById('discount-row').style.display = 'flex';
+      document.getElementById('summary-discount-code').textContent = appliedDiscountCode;
+      document.getElementById('summary-discount-amount').textContent = `-₹${appliedDiscountAmount.toLocaleString('en-IN')}`;
+    } else {
+      document.getElementById('discount-row').style.display = 'none';
     }
 
     document.getElementById('summary-total').textContent = `₹${total.toLocaleString('en-IN')}`;
@@ -699,6 +721,7 @@
   }
 
   // Submit order
+
   async function submitOrder() {
     document.getElementById('address-error').style.display = 'none';
     document.getElementById('form-error').style.display = 'none';
@@ -746,7 +769,8 @@
     try {
       // 1. Create order on backend
       const deliveryFee = calcDeliveryFee(selectedDistance);
-      const totalAmount = Math.round((product.price + deliveryFee) * 100); // in paise
+      let totalAmount = Math.round((product.price + deliveryFee - appliedDiscountAmount) * 100); // in paise
+      if (totalAmount < 0) totalAmount = 0;
       const res = await fetch('/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -791,7 +815,9 @@
               product_id: product.id,
               address_id: addressId,
               payment_proof_url: response.razorpay_payment_id,
-              status: 'pending'
+              status: 'pending',
+              discount_code: appliedDiscountCode,
+              discount_amount: appliedDiscountAmount
             });
 
             if (orderError) throw orderError;
@@ -862,6 +888,29 @@
     toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span> ${message}`;
     document.getElementById('toast-container').appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
+  }
+
+  async function applyDiscount() {
+    const input = document.getElementById('discount-input').value.trim().toUpperCase();
+    const msgEl = document.getElementById('discount-message');
+    if (!input) return;
+    
+    msgEl.style.color = 'var(--text-secondary)';
+    msgEl.textContent = 'Checking...';
+    
+    const { data, error } = await _supabase.from('discount_codes').select('*').eq('code', input).single();
+    if (error || !data) {
+      msgEl.style.color = 'var(--danger)';
+      msgEl.textContent = 'Invalid or expired code.';
+      appliedDiscountCode = null;
+      appliedDiscountAmount = 0;
+    } else {
+      msgEl.style.color = 'var(--success)';
+      msgEl.textContent = 'Discount applied!';
+      appliedDiscountCode = data.code;
+      appliedDiscountAmount = data.amount;
+    }
+    updateSummaryUI();
   }
 </script>
 </body>
