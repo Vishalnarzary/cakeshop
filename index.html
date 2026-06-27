@@ -418,10 +418,10 @@ function frameUrl(i) {
 }
 
 /* --- Loading UI --- */
-function setLoadingProgress(n) {
-  const pct = n / TOTAL_FRAMES * 100;
+function setLoadingProgress(n, total) {
+  const pct = n / total * 100;
   document.getElementById('ls-fill').style.width  = pct + '%';
-  document.getElementById('ls-count').textContent = n + ' / ' + TOTAL_FRAMES;
+  document.getElementById('ls-count').textContent = Math.round(pct) + '%';
 }
 
 function hideLoadingScreen() {
@@ -433,22 +433,37 @@ function hideLoadingScreen() {
 }
 
 /* --- Preload --- */
-function preloadFrames() {
+const CRITICAL_FRAMES_COUNT = 58;
+
+function preloadCriticalFrames() {
   return new Promise(resolve => {
-    let done = false;
-    frames.forEach((_, i) => {
+    let criticalLoaded = 0;
+    let resolved = false;
+
+    for (let i = 0; i < CRITICAL_FRAMES_COUNT; i++) {
       const img = new Image();
       img.onload = img.onerror = () => {
         if (img.complete && img.naturalWidth > 0) frames[i] = img;
-        loadedCount++;
-        setLoadingProgress(loadedCount);
-        if (loadedCount === TOTAL_FRAMES && !done) {
-          done = true; resolve();
+        criticalLoaded++;
+        setLoadingProgress(criticalLoaded, CRITICAL_FRAMES_COUNT);
+        if (criticalLoaded === CRITICAL_FRAMES_COUNT && !resolved) {
+          resolved = true;
+          resolve();
         }
       };
       img.src = frameUrl(i);
-    });
+    }
   });
+}
+
+function preloadRemainingFrames() {
+  for (let i = CRITICAL_FRAMES_COUNT; i < TOTAL_FRAMES; i++) {
+    const img = new Image();
+    img.onload = img.onerror = () => {
+      if (img.complete && img.naturalWidth > 0) frames[i] = img;
+    };
+    img.src = frameUrl(i);
+  }
 }
 
 /* --- Canvas --- */
@@ -610,10 +625,12 @@ resizeCanvas();
 /* Start auth + products in parallel with frame preload */
 initAuth();
 
-preloadFrames().then(() => {
+preloadCriticalFrames().then(() => {
   hideLoadingScreen();
   /* After loading screen fades, play intro animation to frame 58 */
   startAutoPlay();
+  /* Simultaneously preload the remaining frames in the background */
+  preloadRemainingFrames();
 });
 
 
