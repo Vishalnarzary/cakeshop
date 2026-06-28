@@ -44,29 +44,8 @@
       </div>
 
       <button type="submit" class="btn btn-primary btn-full" id="btn-submit">
-        <span id="btn-text">Sign In with Password</span>
+        <span id="btn-text">Sign In</span>
       </button>
-
-      <div style="text-align: center; margin-top: 12px;">
-        <a href="#" onclick="toggleOtpMode(true); return false;" style="font-size: 0.85rem;">Login with Magic Link Instead</a>
-      </div>
-    </form>
-
-    <!-- Request Magic Link Form -->
-    <form id="otp-request-form" onsubmit="handleRequestOtp(event)" style="display:none;">
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter your email and we'll send you a secure login link.</p>
-      <div class="form-group">
-        <label class="form-label" for="otp-email">Email Address <span class="required">*</span></label>
-        <input id="otp-email" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-full" id="btn-otp-req">
-        <span id="btn-otp-req-text">Send Magic Link</span>
-      </button>
-
-      <div style="text-align: center; margin-top: 12px;">
-        <a href="#" onclick="toggleOtpMode(false); return false;" style="font-size: 0.85rem;">Back to Password Login</a>
-      </div>
     </form>
 
 
@@ -110,54 +89,12 @@
   })();
 
   function switchTab(tab) {
-    if(isOtpMode) toggleOtpMode(false);
     activeTab = tab;
     document.getElementById('tab-user').classList.toggle('active', tab === 'user');
     document.getElementById('tab-admin').classList.toggle('active', tab === 'admin');
     document.getElementById('user-footer').style.display = tab === 'user' ? 'block' : 'none';
     document.getElementById('admin-footer').style.display = tab === 'admin' ? 'block' : 'none';
     clearAlerts();
-  }
-
-  let isOtpMode = false;
-  let currentOtpEmail = '';
-
-  function toggleOtpMode(show) {
-    isOtpMode = show;
-    clearAlerts();
-    document.getElementById('login-form').style.display = show ? 'none' : 'block';
-    document.getElementById('otp-request-form').style.display = show ? 'block' : 'none';
-    document.querySelector('.auth-logo p').textContent = show ? 'Login with Magic Link' : 'Sign in to your account';
-    if(show) document.getElementById('otp-email').value = document.getElementById('email').value;
-  }
-
-  async function handleRequestOtp(e) {
-    e.preventDefault();
-    clearAlerts();
-    const email = document.getElementById('otp-email').value.trim();
-    const btn = document.getElementById('btn-otp-req');
-    const btnText = document.getElementById('btn-otp-req-text');
-
-    btn.disabled = true;
-    btnText.textContent = 'Sending...';
-
-    // We send standard Magic Link / OTP
-    const { error } = await _supabase.auth.signInWithOtp({ 
-      email: email,
-      options: {
-        emailRedirectTo: window.location.origin + '/index.html'
-      }
-    });
-
-    if (error) {
-      showError(error.message);
-      btn.disabled = false;
-      btnText.textContent = 'Send Magic Link';
-    } else {
-      showSuccess('Magic Link sent! Check your email (and spam folder) and click the link to log in.');
-      btn.disabled = false;
-      btnText.textContent = 'Send Magic Link';
-    }
   }
 
 
