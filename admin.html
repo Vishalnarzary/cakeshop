@@ -887,23 +887,9 @@
         ${addr ? `
           <div class="drawer-info-row"><span class="drawer-info-label">Recipient</span><span class="drawer-info-value">${escHtml(addr.name)}</span></div>
           <div class="drawer-info-row"><span class="drawer-info-label">Phone</span><span class="drawer-info-value">${escHtml(addr.phone || '—')}</span></div>
-          <div class="drawer-info-row"><span class="drawer-info-label">Street</span><span class="drawer-info-value">${escHtml(addr.street)}</span></div>
-          <div class="drawer-info-row"><span class="drawer-info-label">City</span><span class="drawer-info-value">${escHtml(addr.city)}</span></div>
-          <div class="drawer-info-row"><span class="drawer-info-label">State</span><span class="drawer-info-value">${escHtml(addr.state)}</span></div>
-          <div class="drawer-info-row"><span class="drawer-info-label">PIN Code</span><span class="drawer-info-value">${escHtml(addr.pincode)}</span></div>
+          <div class="drawer-info-row"><span class="drawer-info-label">Full Address</span><span class="drawer-info-value">${escHtml(addr.full_address || '—')}</span></div>
+          <div class="drawer-info-row"><span class="drawer-info-label">House/Floor</span><span class="drawer-info-value">${escHtml(addr.building_floor || '—')}</span></div>
         ` : '<div style="color:var(--text-muted);font-size:0.875rem;">No address provided</div>'}
-      </div>
-
-      <!-- Payment Proof -->
-      <div class="drawer-section">
-        <div class="drawer-section-title">🧾 Payment Proof</div>
-        ${order.payment_proof_url
-          ? `<img src="${order.payment_proof_url}" class="drawer-proof-img"
-              onclick="document.getElementById('proof-img').src='${order.payment_proof_url}';document.getElementById('proof-modal').classList.add('open');"
-              title="Click to view full size" />
-             <p style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;text-align:center;">Click image to view full size</p>`
-          : '<div style="color:var(--text-muted);font-size:0.875rem;">No proof of payment uploaded</div>'
-        }
       </div>`;
 
     // Status buttons in footer
