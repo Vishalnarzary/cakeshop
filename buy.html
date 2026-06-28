@@ -251,8 +251,6 @@
         <button class="modal-close" onclick="document.getElementById('address-dropdown-container').style.display='none'" style="position:absolute; top:-8px; right:-8px; background:transparent; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">×</button>
     <h3 style="margin-bottom: 20px; font-size:1.15rem; color:#fff;">📍 Delivery Address</h3>
     
-    <div id="address-error" class="alert alert-error" style="display:none"></div>
-    
     <!-- Saved Addresses -->
     <div id="saved-addresses-section">
       <div id="address-loading" style="text-align:center;padding:16px;color:var(--text-secondary);font-size:0.875rem;">Loading saved addresses...</div>
@@ -292,12 +290,13 @@
         <input type="checkbox" id="save-address" checked style="accent-color:#000000;" />
         Save this address for future orders
       </label>
-      <button class="btn btn-primary btn-full" onclick="confirmNewAddress()" style="margin-bottom:8px;">Save & Use Address</button>
+      <div id="address-error" class="alert alert-error" style="display:none; margin-bottom: 12px;"></div>
+      <button type="button" class="btn btn-primary btn-full" onclick="confirmNewAddress()" style="margin-bottom:8px;">Save & Use Address</button>
     </div>
       </div>
 
       <!-- PROMO BANNER -->
-      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 8px 16px; border-radius: var(--radius-md); text-align: center; font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;">
+      <div style="color: var(--success); text-align: center; font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;">
         Free delivery on all orders above ₹100 up to 6km
       </div>
 
@@ -715,8 +714,8 @@
       list.appendChild(div);
     });
 
-    // Select the first address by default
-    if (savedAddresses.length > 0) {
+    // Select the first address by default only if no address is currently selected
+    if (savedAddresses.length > 0 && !selectedAddressId) {
       selectAddress(savedAddresses[0].id);
     }
   }
@@ -767,9 +766,19 @@
       return;
     }
 
-    // Refresh address list and select this new address
-    await loadAddresses();
-    selectAddress(newAddr.id);
+    try {
+      // Refresh address list and select this new address
+      await loadAddresses();
+      if (newAddr && newAddr.id) {
+        selectAddress(newAddr.id);
+      }
+    } catch (err) {
+      console.error("Error updating UI after save:", err);
+    } finally {
+      // Force dropdown to close and scroll up
+      document.getElementById('address-dropdown-container').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   async function deleteAddress(id, event) {
