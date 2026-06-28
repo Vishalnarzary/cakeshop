@@ -25,11 +25,14 @@ export default async function handler(req, res) {
 
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzZmt6cGx0dmp2eWppcWprcWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTUxNTMsImV4cCI6MjA5ODAzMTE1M30.ryHeukWAXmg6VYBgUK9Rsmsc9etKDlKyX7x8lTgShBk';
   const authClient = createClient(process.env.SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } }
+    auth: { persistSession: false, autoRefreshToken: false }
   });
 
   try {
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (token === 'undefined' || !token) {
+        return res.status(401).json({ message: 'No valid token provided' });
+    }
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ message: 'Unauthorized or token expired' });
 
     const secret = process.env.RAZORPAY_KEY_SECRET;
