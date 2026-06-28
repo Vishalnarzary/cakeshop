@@ -84,7 +84,8 @@
     });
 
     if (error) {
-      showError(error.message);
+      console.error("Signup error details:", error);
+      showError(error.message || error.error_description || JSON.stringify(error));
       btn.disabled = false;
       btnText.textContent = 'Create Account';
       return;
