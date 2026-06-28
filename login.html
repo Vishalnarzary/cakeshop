@@ -46,6 +46,27 @@
       <button type="submit" class="btn btn-primary btn-full" id="btn-submit">
         <span id="btn-text">Sign In</span>
       </button>
+
+      <div style="text-align: center; margin-top: 12px;">
+        <a href="#" onclick="toggleForgotPassword(true); return false;" style="font-size: 0.85rem;">Forgot Password?</a>
+      </div>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgot-password-form" onsubmit="handleForgotPassword(event)" style="display:none;">
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter your email and we'll send you a password reset link.</p>
+      <div class="form-group">
+        <label class="form-label" for="reset-email">Email Address <span class="required">*</span></label>
+        <input id="reset-email" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="btn-reset">
+        <span id="btn-reset-text">Send Reset Link</span>
+      </button>
+
+      <div style="text-align: center; margin-top: 12px;">
+        <a href="#" onclick="toggleForgotPassword(false); return false;" style="font-size: 0.85rem;">Back to Login</a>
+      </div>
     </form>
 
     <div class="auth-footer" id="user-footer">
@@ -87,12 +108,47 @@
   })();
 
   function switchTab(tab) {
+    if(isForgotPassword) toggleForgotPassword(false);
     activeTab = tab;
     document.getElementById('tab-user').classList.toggle('active', tab === 'user');
     document.getElementById('tab-admin').classList.toggle('active', tab === 'admin');
     document.getElementById('user-footer').style.display = tab === 'user' ? 'block' : 'none';
     document.getElementById('admin-footer').style.display = tab === 'admin' ? 'block' : 'none';
     clearAlerts();
+  }
+
+  let isForgotPassword = false;
+  function toggleForgotPassword(show) {
+    isForgotPassword = show;
+    clearAlerts();
+    document.getElementById('login-form').style.display = show ? 'none' : 'block';
+    document.getElementById('forgot-password-form').style.display = show ? 'block' : 'none';
+    document.querySelector('.auth-logo p').textContent = show ? 'Reset your password' : 'Sign in to your account';
+    if(show) document.getElementById('reset-email').value = document.getElementById('email').value;
+  }
+
+  async function handleForgotPassword(e) {
+    e.preventDefault();
+    clearAlerts();
+    const email = document.getElementById('reset-email').value.trim();
+    const btn = document.getElementById('btn-reset');
+    const btnText = document.getElementById('btn-reset-text');
+
+    btn.disabled = true;
+    btnText.textContent = 'Sending...';
+
+    const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password.html',
+    });
+
+    if (error) {
+      showError(error.message);
+    } else {
+      showSuccess('Password reset link sent! Please check your email.');
+    }
+    
+    btn.disabled = false;
+    btnText.textContent = 'Send Reset Link';
   }
 
   async function handleLogin(e) {
