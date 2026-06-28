@@ -132,7 +132,7 @@ export default async function handler(req, res) {
     const rzpOrder = await razorpay.orders.create({
       amount: totalAmountPaise,
       currency: 'INR',
-      receipt: `order_${newOrder.id}`
+      receipt: newOrder.id // Max 40 characters. UUID is 36.
     });
 
     return res.status(200).json({
@@ -145,6 +145,13 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error creating secure order:', error);
-    return res.status(500).json({ message: error.message || 'Error creating order' });
+    // Extract the most specific error message possible
+    let errorMsg = 'Error creating order';
+    if (error?.message) errorMsg = error.message;
+    if (error?.error?.description) errorMsg = error.error.description;
+    if (error?.details) errorMsg += ' - ' + error.details;
+    if (error?.hint) errorMsg += ' (' + error.hint + ')';
+    
+    return res.status(500).json({ message: errorMsg, raw_error: error });
   }
 }
