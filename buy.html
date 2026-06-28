@@ -176,135 +176,173 @@
 <!-- Main -->
 <main>
   <div class="container">
+    
     <!-- Product Loading -->
     <div id="product-loading" class="loading-state">
       <div class="spinner"></div>
       <p>Loading product...</p>
     </div>
 
-    <!-- Order Layout -->
-    <div class="order-layout" id="order-layout" style="display:none">
+    <!-- Timer -->
+    <div class="timer-banner fade-up" id="timer-banner" style="margin-bottom: 24px;">
+      ⏳ Order reserved! Complete checkout in <span id="timer-display">05:00</span>
+    </div>
 
-      <!-- Left: Form -->
-      <div>
-        <div class="timer-banner fade-up" id="timer-banner">
-          ⏳ Order reserved! Complete checkout in <span id="timer-display">05:00</span>
+    <!-- Checkout Unified Card -->
+    <div class="checkout-unified-card fade-up" id="order-layout" style="display:none; max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 24px; position: relative;">
+      
+      <!-- Top product info -->
+      <div class="unified-product-header" style="display:flex; gap:16px; align-items:center; margin-bottom:24px;">
+        <div class="unified-product-img" id="product-img-display" style="width:72px; height:72px; border-radius:12px; background:var(--bg-glass); display:flex; align-items:center; justify-content:center; font-size:2rem; flex-shrink:0;">📦</div>
+        <div class="unified-product-details">
+          <div style="font-size:0.75rem; color:var(--accent-blue-light); margin-bottom:4px; font-weight:600;">You're ordering</div>
+          <div style="font-size:1.15rem; font-weight:800; line-height:1.2; margin-bottom:4px;" id="product-name-display">—</div>
+          <div style="font-size:0.875rem; color:var(--text-secondary);" id="product-stock-display"></div>
         </div>
-
-        <!-- Product Info -->
-        <div class="order-product-info fade-up">
-          <div class="order-product-img" id="product-img-display">📦</div>
-          <div>
-            <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;">You're ordering</div>
-            <div style="font-size:1.15rem;font-weight:800;" id="product-name-display">—</div>
-            <div style="font-size:0.875rem;color:var(--text-secondary);" id="product-stock-display"></div>
-          </div>
-        </div>
-
-        <!-- Delivery Address -->
-        <div class="section-card fade-up fade-up-delay-1">
-          <h3>📍 Delivery Address</h3>
-
-          <div id="address-error" class="alert alert-error" style="display:none"></div>
-
-          <!-- Saved Addresses -->
-          <div id="saved-addresses-section">
-            <div id="address-loading" style="text-align:center;padding:16px;color:var(--text-secondary);font-size:0.875rem;">Loading saved addresses...</div>
-            <div class="address-list" id="address-list" style="display:none"></div>
-          </div>
-
-          <!-- Add New Address Toggle -->
-          <button class="add-address-toggle" id="toggle-new-address" onclick="toggleNewAddress()">
-            ＋ Add a new delivery address
-          </button>
-
-          <!-- New Address Form -->
-          <div class="new-address-form" id="new-address-form" style="display:none">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-              <div class="form-group">
-                <label class="form-label">Full Name <span class="required">*</span></label>
-                <input id="addr-name" type="text" class="form-control" placeholder="Recipient's full name" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Phone Number <span class="required">*</span></label>
-                <input id="addr-phone" type="tel" class="form-control" placeholder="10-digit number" />
-              </div>
-            </div>
-            <div class="form-group" style="position:relative;">
-              <label class="form-label">Search Delivery Address <span class="required">*</span></label>
-              <input id="addr-full-address" type="text" class="form-control" placeholder="Search area or landmark..." oninput="handleAddressSearch(event)" autocomplete="off" />
-              <div id="address-suggestions" style="position:absolute; top:100%; left:0; right:0; background:#121212; border:1px solid var(--border-glass); border-radius:var(--radius-md); z-index:10; display:none; max-height:200px; overflow-y:auto; box-shadow:0 15px 30px -5px rgba(0,0,0,0.8);"></div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Building Name and Floor <span class="required">*</span></label>
-              <input id="addr-building-floor" type="text" class="form-control" placeholder="e.g. Tower B, 3rd Floor" />
-            </div>
-            <div id="distance-display" style="font-size:0.875rem; color:rgba(255,255,255,0.7); margin-bottom:16px; display:none;">
-              📍 Distance from bakery: <strong id="distance-val">...</strong>
-            </div>
-            <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--text-secondary);cursor:pointer;">
-              <input type="checkbox" id="save-address" checked style="accent-color:#000000;" />
-              Save this address for future orders
-            </label>
-          </div>
-        </div>
-
-        <div id="form-error" class="alert alert-error" style="display:none; margin-top: 16px;"></div>
       </div>
 
-      <!-- Right: Summary -->
-      <div class="order-summary-card fade-up fade-up-delay-3">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;">📋 Order Summary</h3>
-        <div class="summary-row">
-          <span class="label">Product</span>
-          <span class="value" id="summary-product">—</span>
+      <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; border-top:1px solid var(--border-glass); padding-top:24px;">📋 Order Summary</h3>
+      
+      <div class="summary-row">
+        <span class="label">Product</span>
+        <span class="value" id="summary-product" style="font-weight:600; color:#fff;">—</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Unit Price</span>
+        <span class="value" id="summary-price" style="font-weight:700; color:#fff;">—</span>
+      </div>
+      <div class="summary-row" style="align-items: center; border-bottom: none; padding-bottom: 24px;">
+        <span class="label">Quantity</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn btn-secondary btn-qty" onclick="changeQuantity(-1)" style="padding: 2px 8px; font-size: 1rem; min-width: 32px; background:transparent; border-color:var(--border-glass);">-</button>
+          <span class="value" id="summary-quantity" style="width: 20px; text-align: center; color:#fff; font-weight:700;">1</span>
+          <button class="btn btn-secondary btn-qty" onclick="changeQuantity(1)" style="padding: 2px 8px; font-size: 1rem; min-width: 32px; background:transparent; border-color:var(--border-glass);">+</button>
         </div>
-        <div class="summary-row">
-          <span class="label">Unit Price</span>
-          <span class="value" id="summary-price">—</span>
-        </div>
-        <div class="summary-row" style="align-items: center;">
-          <span class="label">Quantity</span>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 1rem; min-width: 32px;" onclick="changeQuantity(-1)">-</button>
-            <span class="value" id="summary-quantity" style="width: 20px; text-align: center;">1</span>
-            <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 1rem; min-width: 32px;" onclick="changeQuantity(1)">+</button>
-          </div>
-        </div>
-        <div class="summary-row">
-          <span class="label">Delivery</span>
-          <span class="value" id="summary-delivery" style="color:var(--success);">—</span>
-        </div>
-        <div class="divider"></div>
-        <div class="summary-row" id="discount-row" style="display:none;">
-          <span class="label">Discount (<span id="summary-discount-code"></span>)</span>
-          <span class="value" id="summary-discount-amount" style="color:var(--success);">—</span>
-        </div>
-        <div style="margin-bottom:16px;">
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="discount-input" class="form-control" style="text-transform:uppercase; font-size:0.875rem;" placeholder="Discount code">
-            <button class="btn btn-secondary" style="padding:0 16px; font-size:0.875rem;" onclick="applyDiscount()">Apply</button>
-          </div>
-          <div id="discount-message" style="font-size:0.75rem; margin-top:8px;"></div>
-        </div>
-        <div class="summary-row total">
-          <span class="label" style="font-weight:700;font-size:1rem;">Total</span>
-          <span class="value" id="summary-total" style="color:#fff;">—</span>
-        </div>
-        <button class="btn btn-primary btn-full" style="margin-top:24px;" onclick="submitOrder()" id="submit-btn">
-          <span id="submit-btn-text">Place Order</span>
-        </button>
-        <div id="delivery-limit-message" style="display:none; color:var(--error); font-size:0.875rem; text-align:center; margin-top:12px; font-weight:600;">
-          ❌ We currently deliver only in Kolkata (30km area)
-        </div>
-        <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:14px;">
-          By placing this order you agree to our terms. Your payment will be verified by the admin.
-        </p>
       </div>
 
+      <!-- Address selector block -->
+      <div class="delivery-address-block" onclick="openAddressModal()" style="border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; background: rgba(255,255,255,0.02); margin-bottom: 24px; transition: var(--transition);">
+        <div>
+          <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:2px;">Delivery address</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);" id="display-selected-address">No address selected</div>
+        </div>
+        <div style="color:var(--accent-blue-light); font-weight:700;">›</div>
+      </div>
+
+      <!-- Delivery speed block -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+        <span style="font-weight:700; font-size:0.95rem; color:#fff;">Choose delivery speed</span>
+        <span style="font-size:0.75rem; color:var(--text-secondary);">Added to total</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
+        <label class="speed-option" style="display:flex; align-items:flex-start; gap:12px; border:1px solid var(--border-glass); border-radius:8px; padding:12px 16px; cursor:pointer; transition:var(--transition); position:relative;" id="speed-label-instant">
+          <input type="radio" name="delivery-speed" value="instant" checked onchange="selectSpeed('instant')" style="margin-top:4px; accent-color:var(--accent-blue-light);">
+          <div style="flex:1;">
+            <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:2px;">Instant delivery</div>
+            <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">Fastest option at the normal delivery rate (20-30 mins)</div>
+          </div>
+          <div style="font-weight:700; font-size:0.95rem; color:#fff;" id="speed-price-instant">₹—</div>
+        </label>
+
+        <label class="speed-option" style="display:flex; align-items:flex-start; gap:12px; border:1px solid var(--border-glass); border-radius:8px; padding:12px 16px; cursor:pointer; transition:var(--transition); position:relative;" id="speed-label-delayed">
+          <input type="radio" name="delivery-speed" value="delayed" onchange="selectSpeed('delayed')" style="margin-top:4px; accent-color:var(--accent-blue-light);">
+          <div style="flex:1;">
+            <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:2px;">Delivery in 2-4 hours</div>
+            <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">Lower fee when the order is not urgent</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700; font-size:0.95rem; color:#fff;" id="speed-price-delayed">₹—</div>
+            <div style="font-size:0.7rem; color:var(--success); font-weight:700; margin-top:2px;">₹15 less</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="discount-block" style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="text" id="discount-input" class="form-control" style="text-transform:uppercase; font-size:0.875rem;" placeholder="DISCOUNT CODE">
+        <button class="btn btn-secondary" style="padding:0 16px; font-size:0.875rem;" onclick="applyDiscount()">Apply</button>
+      </div>
+      <div id="discount-message" style="font-size:0.75rem; margin-bottom:24px;"></div>
+
+      <div class="summary-row" id="discount-row" style="display:none; margin-bottom:12px; border:none; padding:0;">
+        <span class="label">Discount (<span id="summary-discount-code"></span>)</span>
+        <span class="value" id="summary-discount-amount" style="color:var(--success);">—</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="summary-row total" style="margin-top:24px; margin-bottom: 24px; border:none; padding:0;">
+        <span class="label" style="font-weight:800;font-size:1.15rem; color:#fff;">Total</span>
+        <span class="value" id="summary-total" style="font-size:1.5rem; font-weight:800; color:#fff;">—</span>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="submitOrder()" id="submit-btn" style="height: 52px; font-size:1rem;">
+        <span id="submit-btn-text">Place Order</span>
+      </button>
+      <div id="delivery-limit-message" style="display:none; color:var(--error); font-size:0.875rem; text-align:center; margin-top:12px; font-weight:600;">
+        ❌ We currently deliver only in Kolkata (30km area)
+      </div>
+      <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:14px;">
+        By placing this order you agree to our terms. Your<br/>payment will be verified by the admin.
+      </p>
+
+      <div id="form-error" class="alert alert-error" style="display:none; margin-top: 16px;"></div>
     </div>
   </div>
 </main>
+
+<!-- Address Modal Overlay -->
+<div class="modal-overlay" id="address-modal-overlay" style="display:none; z-index:1000;" onclick="closeAddressModal()">
+  <div class="modal-content" style="max-width:480px; width:100%; position:relative; background:var(--bg-card); padding:24px; border-radius:var(--radius-lg); border:1px solid var(--border-glass);" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeAddressModal()" style="position:absolute; top:16px; right:16px; background:transparent; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">×</button>
+    <h3 style="margin-bottom: 20px; font-size:1.15rem; color:#fff;">📍 Delivery Address</h3>
+    
+    <div id="address-error" class="alert alert-error" style="display:none"></div>
+    
+    <!-- Saved Addresses -->
+    <div id="saved-addresses-section">
+      <div id="address-loading" style="text-align:center;padding:16px;color:var(--text-secondary);font-size:0.875rem;">Loading saved addresses...</div>
+      <div class="address-list" id="address-list" style="display:none; flex-direction:column; gap:12px;"></div>
+    </div>
+
+    <!-- Add New Address Toggle -->
+    <button class="add-address-toggle" id="toggle-new-address" onclick="toggleNewAddress()" style="margin-top:16px; width:100%; display:flex; align-items:center; gap:8px; padding:12px 16px; border:2px dashed var(--border-glass); background:rgba(255,255,255,0.02); color:#fff; border-radius:var(--radius-md); font-size:0.875rem; cursor:pointer; justify-content:center; transition:var(--transition);">
+      ＋ Add a new delivery address
+    </button>
+
+    <!-- New Address Form -->
+    <div class="new-address-form" id="new-address-form" style="display:none; margin-top:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Full Name <span class="required">*</span></label>
+          <input id="addr-name" type="text" class="form-control" placeholder="Recipient's full name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number <span class="required">*</span></label>
+          <input id="addr-phone" type="tel" class="form-control" placeholder="10-digit number" />
+        </div>
+      </div>
+      <div class="form-group" style="position:relative;">
+        <label class="form-label">Search Delivery Address <span class="required">*</span></label>
+        <input id="addr-full-address" type="text" class="form-control" placeholder="Search area or landmark..." oninput="handleAddressSearch(event)" autocomplete="off" />
+        <div id="address-suggestions" style="position:absolute; top:100%; left:0; right:0; background:#121212; border:1px solid var(--border-glass); border-radius:var(--radius-md); z-index:10; display:none; max-height:200px; overflow-y:auto; box-shadow:0 15px 30px -5px rgba(0,0,0,0.8);"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Building Name and Floor <span class="required">*</span></label>
+        <input id="addr-building-floor" type="text" class="form-control" placeholder="e.g. Tower B, 3rd Floor" />
+      </div>
+      <div id="distance-display" style="font-size:0.875rem; color:rgba(255,255,255,0.7); margin-bottom:16px; display:none;">
+        📍 Distance from bakery: <strong id="distance-val">...</strong>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--text-secondary);cursor:pointer; margin-bottom:16px;">
+        <input type="checkbox" id="save-address" checked style="accent-color:#000000;" />
+        Save this address for future orders
+      </label>
+      <button class="btn btn-primary btn-full" onclick="confirmNewAddress()" style="margin-bottom:8px;">Save & Use Address</button>
+    </div>
+  </div>
+</div>
+
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="supabase.js"></script>
@@ -321,6 +359,7 @@
   let appliedDiscountCode = null;
   let appliedDiscountAmount = 0;
   let orderQuantity = 1;
+  let selectedDeliverySpeed = 'instant';
 
   const params = new URLSearchParams(window.location.search);
   const productId = params.get('product');
@@ -412,29 +451,53 @@
   // < 1.5 km  : FREE
   // 0 – 2 km  : ₹15 per km
   // > 2 km    : ₹15/km for first 2km + ₹10/km for every km beyond
-  function calcDeliveryFee(distanceKm) {
+  function calcDeliveryFee(distanceKm, speed, subtotal) {
     if (!distanceKm || distanceKm < 1.5) return 0;
-    if (distanceKm <= 2) return Math.round(distanceKm * 15);
-    return Math.round(2 * 15 + (distanceKm - 2) * 10);
+    
+    let base = 0;
+    if (distanceKm <= 2) base = Math.round(distanceKm * 15);
+    else base = Math.round(2 * 15 + (distanceKm - 2) * 10);
+    
+    if (speed === 'delayed') {
+      if (subtotal > 100) return 0; // free if order amount > 100
+      return Math.max(0, base - 15);
+    }
+    return base;
   }
 
   function updateSummaryUI() {
     const price = Number(product.price);
     const subtotal = price * orderQuantity;
-    const fee = calcDeliveryFee(selectedDistance);
+    
+    // Normal fee vs Delayed fee
+    const normalFee = calcDeliveryFee(selectedDistance, 'instant', subtotal);
+    const delayedFee = calcDeliveryFee(selectedDistance, 'delayed', subtotal);
+    
+    const instantEl = document.getElementById('speed-price-instant');
+    const delayedEl = document.getElementById('speed-price-delayed');
+    // Using nth-child or adding ID dynamically if needed for badge
+    const delayedBadgeEl = document.querySelector('#speed-label-delayed > div:nth-child(3) > div:nth-child(2)');
+    
+    if (selectedDistance !== null) {
+      instantEl.textContent = normalFee > 0 ? `₹${normalFee}` : 'Free';
+      if (subtotal > 100) {
+        delayedEl.textContent = 'Free';
+        if (delayedBadgeEl) delayedBadgeEl.textContent = 'Free > ₹100';
+      } else {
+        delayedEl.textContent = delayedFee > 0 ? `₹${delayedFee}` : 'Free';
+        if (delayedBadgeEl) delayedBadgeEl.textContent = '₹15 less';
+      }
+    } else {
+      instantEl.textContent = '₹—';
+      delayedEl.textContent = '₹—';
+      if (delayedBadgeEl) delayedBadgeEl.textContent = '₹15 less';
+    }
+
+    const fee = selectedDeliverySpeed === 'instant' ? normalFee : delayedFee;
     let total = subtotal + fee - appliedDiscountAmount;
     if (total < 0) total = 0;
 
     document.getElementById('summary-price').textContent = `₹${price.toLocaleString('en-IN')}`;
-
-    const deliveryEl = document.getElementById('summary-delivery');
-    if (fee === 0) {
-      deliveryEl.textContent = 'Free';
-      deliveryEl.style.color = 'var(--success)';
-    } else {
-      deliveryEl.textContent = `₹${fee.toLocaleString('en-IN')}`;
-      deliveryEl.style.color = 'var(--text-primary)';
-    }
     
     if (appliedDiscountAmount > 0) {
       document.getElementById('discount-row').style.display = 'flex';
@@ -443,8 +506,31 @@
     } else {
       document.getElementById('discount-row').style.display = 'none';
     }
-
+    
     document.getElementById('summary-total').textContent = `₹${total.toLocaleString('en-IN')}`;
+    document.getElementById('submit-btn-text').textContent = `Place Order • ₹${total.toLocaleString('en-IN')}`;
+    document.getElementById('submit-btn-text').textContent = `Place Order • ₹${total.toLocaleString('en-IN')}`;
+  }
+
+  function selectSpeed(speed) {
+    selectedDeliverySpeed = speed;
+    
+    // Update border styling to show selection
+    document.getElementById('speed-label-instant').style.borderColor = speed === 'instant' ? 'var(--accent-blue-light)' : 'var(--border-glass)';
+    document.getElementById('speed-label-instant').style.background = speed === 'instant' ? 'rgba(255,255,255,0.05)' : 'transparent';
+    
+    document.getElementById('speed-label-delayed').style.borderColor = speed === 'delayed' ? 'var(--accent-blue-light)' : 'var(--border-glass)';
+    document.getElementById('speed-label-delayed').style.background = speed === 'delayed' ? 'rgba(255,255,255,0.05)' : 'transparent';
+    
+    updateSummaryUI();
+  }
+
+  function openAddressModal() {
+    document.getElementById('address-modal-overlay').style.display = 'flex';
+  }
+
+  function closeAddressModal() {
+    document.getElementById('address-modal-overlay').style.display = 'none';
   }
 
   function startTimer() {
@@ -602,8 +688,41 @@
     // Read distance directly from the data attribute on the card div (most reliable)
     const distVal = optDiv?.dataset.distance;
     selectedDistance = distVal ? parseFloat(distVal) : null;
+    
+    // Update the trigger block text
+    const addrText = optDiv ? optDiv.querySelector('.address-details h4').textContent : 'Address Selected';
+    document.getElementById('display-selected-address').textContent = addrText;
+
     validateDeliveryDistance();
     updateSummaryUI();
+    closeAddressModal();
+  }
+
+  async function confirmNewAddress() {
+    const name = document.getElementById('addr-name').value.trim();
+    const phone = document.getElementById('addr-phone').value.trim();
+    const full_address = document.getElementById('addr-full-address').value.trim();
+    const building_floor = document.getElementById('addr-building-floor').value.trim();
+
+    if (!name || !phone || !full_address || !building_floor || selectedDistance === null) {
+      document.getElementById('address-error').innerHTML = '❌ Please select a valid address from suggestions and fill all fields.';
+      document.getElementById('address-error').style.display = 'flex';
+      return;
+    }
+
+    const { data: newAddr, error: addrError } = await _supabase.from('addresses').insert({
+      user_id: currentUser.id, name, phone, full_address, building_floor, distance: selectedDistance
+    }).select().single();
+
+    if (addrError) {
+      document.getElementById('address-error').innerHTML = '❌ Failed to save address: ' + addrError.message;
+      document.getElementById('address-error').style.display = 'flex';
+      return;
+    }
+
+    // Refresh address list and select this new address
+    await loadAddresses();
+    selectAddress(newAddr.id);
   }
 
   async function deleteAddress(id, event) {
@@ -620,6 +739,7 @@
       document.getElementById('address-list').style.display = 'none';
       selectedAddressId = null;
       selectedDistance = null;
+      document.getElementById('display-selected-address').textContent = 'No address selected';
       validateDeliveryDistance();
       updateSummaryUI();
     } else if (selectedAddressId === id) {
@@ -759,39 +879,13 @@
     document.getElementById('form-error').style.display = 'none';
 
     // Validate address selection
-    if (!selectedAddressId && !isNewAddress) {
-      document.getElementById('address-error').innerHTML = '❌ Please select or add a delivery address.';
-      document.getElementById('address-error').style.display = 'flex';
-      document.getElementById('address-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!selectedAddressId) {
+      document.getElementById('form-error').innerHTML = '❌ Please select a delivery address.';
+      document.getElementById('form-error').style.display = 'flex';
+      openAddressModal();
       return;
     }
-
-    // Validate new address fields
     let addressId = selectedAddressId;
-    if (isNewAddress) {
-      const name = document.getElementById('addr-name').value.trim();
-      const phone = document.getElementById('addr-phone').value.trim();
-      const full_address = document.getElementById('addr-full-address').value.trim();
-      const building_floor = document.getElementById('addr-building-floor').value.trim();
-
-      if (!name || !phone || !full_address || !building_floor || selectedDistance === null) {
-        document.getElementById('address-error').innerHTML = '❌ Please select a valid address from suggestions and fill all fields.';
-        document.getElementById('address-error').style.display = 'flex';
-        return;
-      }
-
-      // Save address
-      const { data: newAddr, error: addrError } = await _supabase.from('addresses').insert({
-        user_id: currentUser.id, name, phone, full_address, building_floor, distance: selectedDistance
-      }).select().single();
-
-      if (addrError) {
-        document.getElementById('address-error').innerHTML = '❌ Failed to save address: ' + addrError.message;
-        document.getElementById('address-error').style.display = 'flex';
-        return;
-      }
-      addressId = newAddr.id;
-    }
 
     const btn = document.getElementById('submit-btn');
     const btnText = document.getElementById('submit-btn-text');
@@ -800,7 +894,7 @@
 
     try {
       // 1. Create order on backend
-      const deliveryFee = calcDeliveryFee(selectedDistance);
+      const deliveryFee = calcDeliveryFee(selectedDistance, selectedDeliverySpeed, product.price * orderQuantity);
       let totalAmount = Math.round(((product.price * orderQuantity) + deliveryFee - appliedDiscountAmount) * 100); // in paise
       if (totalAmount < 0) totalAmount = 0;
       const res = await fetch('/api/create-order', {
@@ -850,7 +944,8 @@
               payment_proof_url: response.razorpay_payment_id,
               status: 'pending',
               discount_code: appliedDiscountCode,
-              discount_amount: appliedDiscountAmount
+              discount_amount: appliedDiscountAmount,
+              delivery_speed: selectedDeliverySpeed
             });
 
             if (orderError) throw orderError;

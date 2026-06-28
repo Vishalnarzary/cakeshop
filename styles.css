@@ -1224,3 +1224,7 @@ tbody td {
 .lightbox-price { font-family: 'Inter', sans-serif; font-size: 1.25rem; color: rgba(255,255,255,0.6); }
 #lightbox-desc { color: var(--text-secondary); line-height: 1.6; font-size: 1rem; margin: 0; }
 @media (max-width: 768px) { .lightbox-nav { width: 36px; height: 36px; font-size: 1.2rem; } .lightbox-prev { left: 12px; } .lightbox-next { right: 12px; } #lightbox-title { font-size: 1.5rem; } .lightbox-details { padding: 16px; } .lightbox-img-wrapper { height: 40vh; } }
+
+/* --- Modal --- */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modal-content { max-height: 90vh; overflow-y: auto; }
