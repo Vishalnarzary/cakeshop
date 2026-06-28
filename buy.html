@@ -138,15 +138,21 @@
       display: none;
     }
     
-    /* --- Modal Styles Fallback --- */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); 
-      display: flex; align-items: center; justify-content: center; 
-      z-index: 1000; padding: 20px;
+    
+      /* --- Address Dropdown Styles --- */
+    .address-dropdown-container {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-top: -12px;
+      margin-bottom: 24px;
+      animation: slideDown 0.3s ease forwards;
     }
-    .modal-content {
-      max-height: 90vh; overflow-y: auto;
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -232,13 +238,63 @@
       </div>
 
       <!-- Address selector block -->
-      <button type="button" class="delivery-address-block" onclick="openAddressModal()" style="width: 100%; text-align: left; border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; background: rgba(255,255,255,0.02); margin-bottom: 24px; transition: var(--transition);">
+      <button type="button" class="delivery-address-block" onclick="toggleAddressDropdown()" style="width: 100%; text-align: left; border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; background: rgba(255,255,255,0.02); margin-bottom: 24px; transition: var(--transition);">
         <div>
           <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:2px;">Delivery address</div>
           <div style="font-size:0.75rem; color:var(--text-secondary);" id="display-selected-address">No address selected</div>
         </div>
         <div style="color:var(--accent-blue-light); font-weight:700;">›</div>
       </button>
+
+      <!-- Address Dropdown Container -->
+      <div id="address-dropdown-container" class="address-dropdown-container" style="position:relative;">
+        <button class="modal-close" onclick="document.getElementById('address-dropdown-container').style.display='none'" style="position:absolute; top:-8px; right:-8px; background:transparent; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">×</button>
+    <h3 style="margin-bottom: 20px; font-size:1.15rem; color:#fff;">📍 Delivery Address</h3>
+    
+    <div id="address-error" class="alert alert-error" style="display:none"></div>
+    
+    <!-- Saved Addresses -->
+    <div id="saved-addresses-section">
+      <div id="address-loading" style="text-align:center;padding:16px;color:var(--text-secondary);font-size:0.875rem;">Loading saved addresses...</div>
+      <div class="address-list" id="address-list" style="display:none; flex-direction:column; gap:12px;"></div>
+    </div>
+
+    <!-- Add New Address Toggle -->
+    <button class="add-address-toggle" id="toggle-new-address" onclick="toggleNewAddress()" style="margin-top:16px; width:100%; display:flex; align-items:center; gap:8px; padding:12px 16px; border:2px dashed var(--border-glass); background:rgba(255,255,255,0.02); color:#fff; border-radius:var(--radius-md); font-size:0.875rem; cursor:pointer; justify-content:center; transition:var(--transition);">
+      ＋ Add a new delivery address
+    </button>
+
+    <!-- New Address Form -->
+    <div class="new-address-form" id="new-address-form" style="display:none; margin-top:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Full Name <span class="required">*</span></label>
+          <input id="addr-name" type="text" class="form-control" placeholder="Recipient's full name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number <span class="required">*</span></label>
+          <input id="addr-phone" type="tel" class="form-control" placeholder="10-digit number" />
+        </div>
+      </div>
+      <div class="form-group" style="position:relative;">
+        <label class="form-label">Search Delivery Address <span class="required">*</span></label>
+        <input id="addr-full-address" type="text" class="form-control" placeholder="Search area or landmark..." oninput="handleAddressSearch(event)" autocomplete="off" />
+        <div id="address-suggestions" style="position:absolute; top:100%; left:0; right:0; background:#121212; border:1px solid var(--border-glass); border-radius:var(--radius-md); z-index:10; display:none; max-height:200px; overflow-y:auto; box-shadow:0 15px 30px -5px rgba(0,0,0,0.8);"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Building Name and Floor <span class="required">*</span></label>
+        <input id="addr-building-floor" type="text" class="form-control" placeholder="e.g. Tower B, 3rd Floor" />
+      </div>
+      <div id="distance-display" style="font-size:0.875rem; color:rgba(255,255,255,0.7); margin-bottom:16px; display:none;">
+        📍 Distance from bakery: <strong id="distance-val">...</strong>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--text-secondary);cursor:pointer; margin-bottom:16px;">
+        <input type="checkbox" id="save-address" checked style="accent-color:#000000;" />
+        Save this address for future orders
+      </label>
+      <button class="btn btn-primary btn-full" onclick="confirmNewAddress()" style="margin-bottom:8px;">Save & Use Address</button>
+    </div>
+      </div>
 
       <!-- Delivery speed block -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
@@ -301,59 +357,6 @@
     </div>
   </div>
 </main>
-
-<!-- Address Modal Overlay -->
-<div class="modal-overlay" id="address-modal-overlay" style="display:none; z-index:1000;" onclick="closeAddressModal()">
-  <div class="modal-content" style="max-width:480px; width:100%; position:relative; background:var(--bg-card); padding:24px; border-radius:var(--radius-lg); border:1px solid var(--border-glass);" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeAddressModal()" style="position:absolute; top:16px; right:16px; background:transparent; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">×</button>
-    <h3 style="margin-bottom: 20px; font-size:1.15rem; color:#fff;">📍 Delivery Address</h3>
-    
-    <div id="address-error" class="alert alert-error" style="display:none"></div>
-    
-    <!-- Saved Addresses -->
-    <div id="saved-addresses-section">
-      <div id="address-loading" style="text-align:center;padding:16px;color:var(--text-secondary);font-size:0.875rem;">Loading saved addresses...</div>
-      <div class="address-list" id="address-list" style="display:none; flex-direction:column; gap:12px;"></div>
-    </div>
-
-    <!-- Add New Address Toggle -->
-    <button class="add-address-toggle" id="toggle-new-address" onclick="toggleNewAddress()" style="margin-top:16px; width:100%; display:flex; align-items:center; gap:8px; padding:12px 16px; border:2px dashed var(--border-glass); background:rgba(255,255,255,0.02); color:#fff; border-radius:var(--radius-md); font-size:0.875rem; cursor:pointer; justify-content:center; transition:var(--transition);">
-      ＋ Add a new delivery address
-    </button>
-
-    <!-- New Address Form -->
-    <div class="new-address-form" id="new-address-form" style="display:none; margin-top:16px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group">
-          <label class="form-label">Full Name <span class="required">*</span></label>
-          <input id="addr-name" type="text" class="form-control" placeholder="Recipient's full name" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Phone Number <span class="required">*</span></label>
-          <input id="addr-phone" type="tel" class="form-control" placeholder="10-digit number" />
-        </div>
-      </div>
-      <div class="form-group" style="position:relative;">
-        <label class="form-label">Search Delivery Address <span class="required">*</span></label>
-        <input id="addr-full-address" type="text" class="form-control" placeholder="Search area or landmark..." oninput="handleAddressSearch(event)" autocomplete="off" />
-        <div id="address-suggestions" style="position:absolute; top:100%; left:0; right:0; background:#121212; border:1px solid var(--border-glass); border-radius:var(--radius-md); z-index:10; display:none; max-height:200px; overflow-y:auto; box-shadow:0 15px 30px -5px rgba(0,0,0,0.8);"></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Building Name and Floor <span class="required">*</span></label>
-        <input id="addr-building-floor" type="text" class="form-control" placeholder="e.g. Tower B, 3rd Floor" />
-      </div>
-      <div id="distance-display" style="font-size:0.875rem; color:rgba(255,255,255,0.7); margin-bottom:16px; display:none;">
-        📍 Distance from bakery: <strong id="distance-val">...</strong>
-      </div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--text-secondary);cursor:pointer; margin-bottom:16px;">
-        <input type="checkbox" id="save-address" checked style="accent-color:#000000;" />
-        Save this address for future orders
-      </label>
-      <button class="btn btn-primary btn-full" onclick="confirmNewAddress()" style="margin-bottom:8px;">Save & Use Address</button>
-    </div>
-  </div>
-</div>
-
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="supabase.js"></script>
@@ -536,9 +539,16 @@
     updateSummaryUI();
   }
 
-  function openAddressModal() {
-    console.log("Opening address modal...");
-    document.getElementById('address-modal-overlay').style.display = 'flex';
+  function toggleAddressDropdown() {
+    
+    
+    const dropdown = document.getElementById('address-dropdown-container');
+    if (dropdown.style.display === 'block') {
+      dropdown.style.display = 'none';
+    } else {
+      dropdown.style.display = 'block';
+    }
+
   }
 
   function closeAddressModal() {
@@ -707,7 +717,7 @@
 
     validateDeliveryDistance();
     updateSummaryUI();
-    closeAddressModal();
+    document.getElementById('address-dropdown-container').style.display = 'none';
   }
 
   async function confirmNewAddress() {
@@ -1028,18 +1038,7 @@
       .replace(/'/g, "&#039;");
   }
 
-  // Fallback indestructible click listener for the address block
-  document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.delivery-address-block');
-    if (btn) {
-      e.preventDefault();
-      const modal = document.getElementById('address-modal-overlay');
-      if (modal) {
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('z-index', '999999', 'important');
-      }
-    }
-  });
+  
 
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
