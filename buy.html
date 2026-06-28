@@ -1019,8 +1019,27 @@
   }
 
   function escHtml(str) {
-    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (!str) return '';
+    return str.toString()
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
+
+  // Fallback indestructible click listener for the address block
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.delivery-address-block');
+    if (btn) {
+      e.preventDefault();
+      const modal = document.getElementById('address-modal-overlay');
+      if (modal) {
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+      }
+    }
+  });
 
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
