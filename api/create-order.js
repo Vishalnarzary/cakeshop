@@ -47,10 +47,19 @@ export default async function handler(req, res) {
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+  // Use the public Anon Key to verify the user token properly
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzZmt6cGx0dmp2eWppcWprcWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTUxNTMsImV4cCI6MjA5ODAzMTE1M30.ryHeukWAXmg6VYBgUK9Rsmsc9etKDlKyX7x8lTgShBk';
+  const authClient = createClient(process.env.SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } }
+  });
+
   try {
     // 1. Verify User Token securely
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) return res.status(401).json({ message: 'Unauthorized or token expired' });
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+        console.error('Auth Error:', authError, 'Token:', token ? token.substring(0, 10) + '...' : 'none');
+        return res.status(401).json({ message: 'Unauthorized or token expired', error: authError });
+    }
     const user_id = user.id;
 
     // 2. Fetch product securely
