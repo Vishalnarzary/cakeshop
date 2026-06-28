@@ -48,20 +48,20 @@
       </button>
 
       <div style="text-align: center; margin-top: 12px;">
-        <a href="#" onclick="toggleOtpMode(true); return false;" style="font-size: 0.85rem;">Login with OTP Instead</a>
+        <a href="#" onclick="toggleOtpMode(true); return false;" style="font-size: 0.85rem;">Login with Magic Link Instead</a>
       </div>
     </form>
 
-    <!-- Request OTP Form -->
+    <!-- Request Magic Link Form -->
     <form id="otp-request-form" onsubmit="handleRequestOtp(event)" style="display:none;">
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter your email to receive a secure login code.</p>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter your email and we'll send you a secure login link.</p>
       <div class="form-group">
         <label class="form-label" for="otp-email">Email Address <span class="required">*</span></label>
         <input id="otp-email" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
       </div>
 
       <button type="submit" class="btn btn-primary btn-full" id="btn-otp-req">
-        <span id="btn-otp-req-text">Send OTP</span>
+        <span id="btn-otp-req-text">Send Magic Link</span>
       </button>
 
       <div style="text-align: center; margin-top: 12px;">
@@ -69,22 +69,7 @@
       </div>
     </form>
 
-    <!-- Verify OTP Form -->
-    <form id="otp-verify-form" onsubmit="handleVerifyOtp(event)" style="display:none;">
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter the 6-digit code sent to your email.</p>
-      <div class="form-group">
-        <label class="form-label" for="otp-code">OTP Code <span class="required">*</span></label>
-        <input id="otp-code" type="text" class="form-control" placeholder="123456" required autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; padding: 12px;" />
-      </div>
 
-      <button type="submit" class="btn btn-primary btn-full" id="btn-otp-ver">
-        <span id="btn-otp-ver-text">Verify & Login</span>
-      </button>
-
-      <div style="text-align: center; margin-top: 12px;">
-        <a href="#" onclick="toggleOtpMode(true); return false;" style="font-size: 0.85rem;">Didn't get it? Try again</a>
-      </div>
-    </form>
 
     <div class="auth-footer" id="user-footer">
       Don't have an account? <a href="register.html">Create one</a>
@@ -142,8 +127,7 @@
     clearAlerts();
     document.getElementById('login-form').style.display = show ? 'none' : 'block';
     document.getElementById('otp-request-form').style.display = show ? 'block' : 'none';
-    document.getElementById('otp-verify-form').style.display = 'none'; // Always hide verify when toggling
-    document.querySelector('.auth-logo p').textContent = show ? 'Login with OTP' : 'Sign in to your account';
+    document.querySelector('.auth-logo p').textContent = show ? 'Login with Magic Link' : 'Sign in to your account';
     if(show) document.getElementById('otp-email').value = document.getElementById('email').value;
   }
 
@@ -151,58 +135,32 @@
     e.preventDefault();
     clearAlerts();
     const email = document.getElementById('otp-email').value.trim();
-    currentOtpEmail = email; // Store for verification
     const btn = document.getElementById('btn-otp-req');
     const btnText = document.getElementById('btn-otp-req-text');
 
     btn.disabled = true;
     btnText.textContent = 'Sending...';
 
-    // We send standard OTP
+    // We send standard Magic Link / OTP
     const { error } = await _supabase.auth.signInWithOtp({ 
-      email: email
+      email: email,
+      options: {
+        emailRedirectTo: window.location.origin + '/index.html'
+      }
     });
 
     if (error) {
       showError(error.message);
       btn.disabled = false;
-      btnText.textContent = 'Send OTP';
+      btnText.textContent = 'Send Magic Link';
     } else {
-      showSuccess('OTP code sent! Check your email (and spam folder).');
-      // Switch to verify form
-      document.getElementById('otp-request-form').style.display = 'none';
-      document.getElementById('otp-verify-form').style.display = 'block';
-      document.getElementById('otp-code').value = '';
+      showSuccess('Magic Link sent! Check your email (and spam folder) and click the link to log in.');
       btn.disabled = false;
-      btnText.textContent = 'Send OTP';
+      btnText.textContent = 'Send Magic Link';
     }
   }
 
-  async function handleVerifyOtp(e) {
-    e.preventDefault();
-    clearAlerts();
-    const token = document.getElementById('otp-code').value.trim();
-    const btn = document.getElementById('btn-otp-ver');
-    const btnText = document.getElementById('btn-otp-ver-text');
 
-    btn.disabled = true;
-    btnText.textContent = 'Verifying...';
-
-    const { data, error } = await _supabase.auth.verifyOtp({ 
-      email: currentOtpEmail,
-      token: token,
-      type: 'email'
-    });
-
-    if (error) {
-      showError(error.message);
-      btn.disabled = false;
-      btnText.textContent = 'Verify & Login';
-      return;
-    }
-
-    handleSuccessfulLogin(data, currentOtpEmail);
-  }
 
   async function handleLogin(e) {
     e.preventDefault();
