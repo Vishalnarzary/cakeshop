@@ -48,6 +48,23 @@
       </button>
     </form>
 
+    <!-- Confirm Signup OTP Form (Hidden initially) -->
+    <form id="signup-verify-form" onsubmit="handleSignupVerifyOtp(event)" style="display:none;">
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">We just resent a 6-digit verification code to your email.</p>
+      <div class="form-group">
+        <label class="form-label" for="signup-otp-code">Verification Code <span class="required">*</span></label>
+        <input id="signup-otp-code" type="text" class="form-control" placeholder="123456" required autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; padding: 12px;" />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="btn-signup-verify">
+        <span id="btn-signup-verify-text">Verify & Login</span>
+      </button>
+      
+      <div style="text-align: center; margin-top: 12px;">
+        <a href="#" onclick="window.location.reload(); return false;" style="font-size: 0.85rem;">Cancel</a>
+      </div>
+    </form>
+
 
 
     <div class="auth-footer" id="user-footer">
@@ -113,13 +130,57 @@
     const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      showError(error.message);
+      if (error.message.includes('Email not confirmed')) {
+        showError('Email not confirmed. Please check your inbox or spam folder for a new code.');
+        
+        // Trigger resend
+        _supabase.auth.resend({
+          type: 'signup',
+          email: email
+        });
+
+        // Show OTP form
+        currentOtpEmail = email;
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('signup-verify-form').style.display = 'block';
+      } else {
+        showError(error.message);
+      }
       btn.disabled = false;
-      btnText.textContent = 'Sign In with Password';
+      btnText.textContent = 'Sign In';
       return;
     }
 
     handleSuccessfulLogin(data, email);
+  }
+
+  let currentOtpEmail = '';
+
+  async function handleSignupVerifyOtp(e) {
+    e.preventDefault();
+    clearAlerts();
+
+    const token = document.getElementById('signup-otp-code').value.trim();
+    const btn = document.getElementById('btn-signup-verify');
+    const btnText = document.getElementById('btn-signup-verify-text');
+
+    btn.disabled = true;
+    btnText.textContent = 'Verifying...';
+
+    const { data, error } = await _supabase.auth.verifyOtp({ 
+      email: currentOtpEmail,
+      token: token,
+      type: 'signup'
+    });
+
+    if (error) {
+      showError(error.message);
+      btn.disabled = false;
+      btnText.textContent = 'Verify & Login';
+      return;
+    }
+
+    handleSuccessfulLogin(data, currentOtpEmail);
   }
 
   async function handleSuccessfulLogin(data, email) {
