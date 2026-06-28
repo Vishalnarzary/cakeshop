@@ -43,6 +43,19 @@
       </button>
     </form>
 
+    <!-- OTP Verification Form (Hidden initially) -->
+    <form id="otp-verify-form" onsubmit="handleVerifyOtp(event)" style="display:none;">
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">We just sent a 6-digit code to your email. Enter it below to confirm your account.</p>
+      <div class="form-group">
+        <label class="form-label" for="otp-code">Verification Code <span class="required">*</span></label>
+        <input id="otp-code" type="text" class="form-control" placeholder="123456" required autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; padding: 12px;" />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="btn-verify">
+        <span id="btn-verify-text">Confirm & Login</span>
+      </button>
+    </form>
+
     <div class="auth-footer">
       Already have an account? <a href="login.html">Sign in</a>
     </div>
@@ -56,6 +69,9 @@
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) window.location.href = 'index.html';
   })();
+
+  let currentSignupEmail = '';
+  let currentSignupName = '';
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -91,18 +107,51 @@
       return;
     }
 
-    // Insert profile row
+    currentSignupEmail = email;
+    currentSignupName = name;
+
+    // Show OTP form, hide register form
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('otp-verify-form').style.display = 'block';
+    showSuccess('Code sent! Please check your email.');
+  }
+
+  async function handleVerifyOtp(e) {
+    e.preventDefault();
+    clearAlerts();
+
+    const token = document.getElementById('otp-code').value.trim();
+    const btn = document.getElementById('btn-verify');
+    const btnText = document.getElementById('btn-verify-text');
+
+    btn.disabled = true;
+    btnText.textContent = 'Verifying...';
+
+    const { data, error } = await _supabase.auth.verifyOtp({ 
+      email: currentSignupEmail,
+      token: token,
+      type: 'signup'
+    });
+
+    if (error) {
+      showError(error.message);
+      btn.disabled = false;
+      btnText.textContent = 'Confirm & Login';
+      return;
+    }
+
+    // Insert profile row now that we are successfully verified and logged in
     if (data.user) {
       await _supabase.from('profiles').insert({
         id: data.user.id,
-        email,
-        name,
+        email: currentSignupEmail,
+        name: currentSignupName,
         role: 'user'
       });
     }
 
-    showSuccess('Account created! Redirecting to login...');
-    setTimeout(() => window.location.href = 'login.html', 1500);
+    showSuccess('Account confirmed! Redirecting...');
+    setTimeout(() => window.location.href = 'index.html', 1500);
   }
 
   function showError(msg) {
