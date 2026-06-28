@@ -766,7 +766,7 @@
         *,
         profiles (name, email),
         products (name, price, image_url, emoji),
-        addresses (name, phone, street, city, state, pincode)
+        addresses (name, phone, street, city, state, pincode, full_address, building_floor)
       `)
       .order('created_at', { ascending: false });
 
