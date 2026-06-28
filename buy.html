@@ -296,6 +296,11 @@
     </div>
       </div>
 
+      <!-- PROMO BANNER -->
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 8px 16px; border-radius: var(--radius-md); text-align: center; font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;">
+        Free delivery on all orders above ₹100 up to 6km
+      </div>
+
       <!-- Delivery speed block -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
         <span style="font-weight:700; font-size:0.95rem; color:#fff;">Choose delivery speed</span>
@@ -461,22 +466,40 @@
     }
   }
 
-  // ---- Delivery Fee Calculator ----
-  // < 1.5 km  : FREE
-  // 0 – 2 km  : ₹15 per km
-  // > 2 km    : ₹15/km for first 2km + ₹10/km for every km beyond
   function calcDeliveryFee(distanceKm, speed, subtotal) {
-    if (!distanceKm || distanceKm < 1.5) return 0;
+    if (distanceKm === null || distanceKm === undefined) return 0;
     
-    let base = 0;
-    if (distanceKm <= 2) base = Math.round(distanceKm * 15);
-    else base = Math.round(2 * 15 + (distanceKm - 2) * 10);
-    
-    if (speed === 'delayed') {
-      if (subtotal > 100) return 0; // free if order amount > 100
-      return Math.max(0, base - 15);
+    let instantFee = 0;
+
+    if (subtotal < 100) {
+      // Step A, Condition 1: Subtotal < 100
+      let partnerCost = 0;
+      if (distanceKm <= 2) {
+        partnerCost = distanceKm * 20;
+      } else {
+        partnerCost = (2 * 20) + ((distanceKm - 2) * 10);
+      }
+      instantFee = Math.max(0, partnerCost - 10);
+    } else {
+      // Step A, Condition 2: Subtotal >= 100
+      if (distanceKm <= 6) {
+        instantFee = 0;
+      } else {
+        instantFee = (distanceKm - 6) * 10;
+      }
     }
-    return base;
+    
+    instantFee = Math.round(instantFee);
+
+    if (speed === 'delayed') {
+      // Step B: Determine 2-4 Hour Delivery Fee
+      if (instantFee === 0) {
+        return 0;
+      }
+      return Math.max(0, instantFee - 10);
+    }
+    
+    return instantFee;
   }
 
   function updateSummaryUI() {
@@ -494,17 +517,19 @@
     
     if (selectedDistance !== null) {
       instantEl.innerHTML = normalFee > 0 ? `₹${normalFee}` : '<span style="color:var(--success);">Free</span>';
-      if (subtotal > 100) {
-        delayedEl.innerHTML = '<span style="color:var(--success);">Free</span>';
-        if (delayedBadgeEl) delayedBadgeEl.textContent = '';
-      } else {
-        delayedEl.innerHTML = delayedFee > 0 ? `₹${delayedFee}` : '<span style="color:var(--success);">Free</span>';
-        if (delayedBadgeEl) delayedBadgeEl.textContent = '₹15 less';
+      delayedEl.innerHTML = delayedFee > 0 ? `₹${delayedFee}` : '<span style="color:var(--success);">Free</span>';
+      
+      if (delayedBadgeEl) {
+        if (normalFee === delayedFee) {
+          delayedBadgeEl.textContent = '';
+        } else {
+          delayedBadgeEl.textContent = `₹${normalFee - delayedFee} less`;
+        }
       }
     } else {
       instantEl.textContent = '₹—';
       delayedEl.textContent = '₹—';
-      if (delayedBadgeEl) delayedBadgeEl.textContent = '₹15 less';
+      if (delayedBadgeEl) delayedBadgeEl.textContent = '₹10 less';
     }
 
     const fee = selectedDeliverySpeed === 'instant' ? normalFee : delayedFee;
