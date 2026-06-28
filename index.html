@@ -971,8 +971,8 @@ function showToast(message, type = 'info') {
       </div>
       <div style="position: relative;">
         <p id="lightbox-desc" onscroll="checkDescScroll()" style="white-space: pre-wrap; max-height: 180px; overflow-y: auto; padding-right: 8px; margin-bottom: 0;">Description</p>
-        <div id="lightbox-desc-fade" style="display:none; position:absolute; bottom:0; left:0; right:8px; height:36px; background:linear-gradient(transparent, var(--bg-card, #111)); pointer-events:none; align-items:flex-end; justify-content:center; padding-bottom:2px;">
-          <span style="animation: bounce-down 1.5s infinite; font-size: 14px; opacity: 0.8;">⬇️</span>
+        <div id="lightbox-desc-fade" onclick="document.getElementById('lightbox-desc').scrollBy({top: 50, behavior: 'smooth'})" style="display:none; position:absolute; bottom:0; left:0; right:8px; height:36px; background:linear-gradient(transparent, var(--bg-card, #111)); cursor: pointer; align-items:flex-end; justify-content:center; padding-bottom:2px;">
+          <span style="animation: bounce-down 1.5s infinite; font-size: 1.2rem; font-weight: bold; opacity: 0.8; letter-spacing: 2px;">...</span>
         </div>
       </div>
       <div class="lightbox-footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
