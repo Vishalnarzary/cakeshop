@@ -44,28 +44,45 @@
       </div>
 
       <button type="submit" class="btn btn-primary btn-full" id="btn-submit">
-        <span id="btn-text">Sign In</span>
+        <span id="btn-text">Sign In with Password</span>
       </button>
 
       <div style="text-align: center; margin-top: 12px;">
-        <a href="#" onclick="toggleForgotPassword(true); return false;" style="font-size: 0.85rem;">Forgot Password?</a>
+        <a href="#" onclick="toggleOtpMode(true); return false;" style="font-size: 0.85rem;">Login with OTP Instead</a>
       </div>
     </form>
 
-    <!-- Forgot Password Form -->
-    <form id="forgot-password-form" onsubmit="handleForgotPassword(event)" style="display:none;">
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter your email and we'll send you a password reset link.</p>
+    <!-- Request OTP Form -->
+    <form id="otp-request-form" onsubmit="handleRequestOtp(event)" style="display:none;">
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter your email to receive a secure login code.</p>
       <div class="form-group">
-        <label class="form-label" for="reset-email">Email Address <span class="required">*</span></label>
-        <input id="reset-email" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
+        <label class="form-label" for="otp-email">Email Address <span class="required">*</span></label>
+        <input id="otp-email" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
       </div>
 
-      <button type="submit" class="btn btn-primary btn-full" id="btn-reset">
-        <span id="btn-reset-text">Send Reset Link</span>
+      <button type="submit" class="btn btn-primary btn-full" id="btn-otp-req">
+        <span id="btn-otp-req-text">Send OTP</span>
       </button>
 
       <div style="text-align: center; margin-top: 12px;">
-        <a href="#" onclick="toggleForgotPassword(false); return false;" style="font-size: 0.85rem;">Back to Login</a>
+        <a href="#" onclick="toggleOtpMode(false); return false;" style="font-size: 0.85rem;">Back to Password Login</a>
+      </div>
+    </form>
+
+    <!-- Verify OTP Form -->
+    <form id="otp-verify-form" onsubmit="handleVerifyOtp(event)" style="display:none;">
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Enter the 6-digit code sent to your email.</p>
+      <div class="form-group">
+        <label class="form-label" for="otp-code">OTP Code <span class="required">*</span></label>
+        <input id="otp-code" type="text" class="form-control" placeholder="123456" required autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; padding: 12px;" />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="btn-otp-ver">
+        <span id="btn-otp-ver-text">Verify & Login</span>
+      </button>
+
+      <div style="text-align: center; margin-top: 12px;">
+        <a href="#" onclick="toggleOtpMode(true); return false;" style="font-size: 0.85rem;">Didn't get it? Try again</a>
       </div>
     </form>
 
@@ -108,7 +125,7 @@
   })();
 
   function switchTab(tab) {
-    if(isForgotPassword) toggleForgotPassword(false);
+    if(isOtpMode) toggleOtpMode(false);
     activeTab = tab;
     document.getElementById('tab-user').classList.toggle('active', tab === 'user');
     document.getElementById('tab-admin').classList.toggle('active', tab === 'admin');
@@ -117,38 +134,74 @@
     clearAlerts();
   }
 
-  let isForgotPassword = false;
-  function toggleForgotPassword(show) {
-    isForgotPassword = show;
+  let isOtpMode = false;
+  let currentOtpEmail = '';
+
+  function toggleOtpMode(show) {
+    isOtpMode = show;
     clearAlerts();
     document.getElementById('login-form').style.display = show ? 'none' : 'block';
-    document.getElementById('forgot-password-form').style.display = show ? 'block' : 'none';
-    document.querySelector('.auth-logo p').textContent = show ? 'Reset your password' : 'Sign in to your account';
-    if(show) document.getElementById('reset-email').value = document.getElementById('email').value;
+    document.getElementById('otp-request-form').style.display = show ? 'block' : 'none';
+    document.getElementById('otp-verify-form').style.display = 'none'; // Always hide verify when toggling
+    document.querySelector('.auth-logo p').textContent = show ? 'Login with OTP' : 'Sign in to your account';
+    if(show) document.getElementById('otp-email').value = document.getElementById('email').value;
   }
 
-  async function handleForgotPassword(e) {
+  async function handleRequestOtp(e) {
     e.preventDefault();
     clearAlerts();
-    const email = document.getElementById('reset-email').value.trim();
-    const btn = document.getElementById('btn-reset');
-    const btnText = document.getElementById('btn-reset-text');
+    const email = document.getElementById('otp-email').value.trim();
+    currentOtpEmail = email; // Store for verification
+    const btn = document.getElementById('btn-otp-req');
+    const btnText = document.getElementById('btn-otp-req-text');
 
     btn.disabled = true;
     btnText.textContent = 'Sending...';
 
-    const { error } = await _supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/reset-password.html',
+    // We send standard OTP
+    const { error } = await _supabase.auth.signInWithOtp({ 
+      email: email
     });
 
     if (error) {
       showError(error.message);
+      btn.disabled = false;
+      btnText.textContent = 'Send OTP';
     } else {
-      showSuccess('Password reset link sent! Please check your email.');
+      showSuccess('OTP code sent! Check your email (and spam folder).');
+      // Switch to verify form
+      document.getElementById('otp-request-form').style.display = 'none';
+      document.getElementById('otp-verify-form').style.display = 'block';
+      document.getElementById('otp-code').value = '';
+      btn.disabled = false;
+      btnText.textContent = 'Send OTP';
     }
-    
-    btn.disabled = false;
-    btnText.textContent = 'Send Reset Link';
+  }
+
+  async function handleVerifyOtp(e) {
+    e.preventDefault();
+    clearAlerts();
+    const token = document.getElementById('otp-code').value.trim();
+    const btn = document.getElementById('btn-otp-ver');
+    const btnText = document.getElementById('btn-otp-ver-text');
+
+    btn.disabled = true;
+    btnText.textContent = 'Verifying...';
+
+    const { data, error } = await _supabase.auth.verifyOtp({ 
+      email: currentOtpEmail,
+      token: token,
+      type: 'email'
+    });
+
+    if (error) {
+      showError(error.message);
+      btn.disabled = false;
+      btnText.textContent = 'Verify & Login';
+      return;
+    }
+
+    handleSuccessfulLogin(data, currentOtpEmail);
   }
 
   async function handleLogin(e) {
@@ -167,10 +220,14 @@
     if (error) {
       showError(error.message);
       btn.disabled = false;
-      btnText.textContent = 'Sign In';
+      btnText.textContent = 'Sign In with Password';
       return;
     }
 
+    handleSuccessfulLogin(data, email);
+  }
+
+  async function handleSuccessfulLogin(data, email) {
     // Fetch profile — auto-upsert if missing (handles manually-created Supabase users)
     let { data: profile, error: profileError } = await _supabase
       .from('profiles')
