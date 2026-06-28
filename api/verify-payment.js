@@ -46,10 +46,10 @@ export default async function handler(req, res) {
       .digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      // Signature is valid, securely update order status to 'paid' in DB
+      // Signature is valid, securely update order status to 'approved' in DB
       const { error: updateError } = await supabase.from('orders')
           .update({ 
-              status: 'paid',
+              status: 'approved',
               payment_proof_url: razorpay_payment_id
           })
           .eq('id', order_id)
@@ -61,8 +61,8 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'Payment verified and order updated successfully' });
     } else {
       // Signature is invalid
-      // Update order to failed
-      await supabase.from('orders').update({ status: 'failed' }).eq('id', order_id);
+      // Update order to rejected
+      await supabase.from('orders').update({ status: 'rejected' }).eq('id', order_id);
       return res.status(400).json({ message: 'Invalid signature' });
     }
   } catch (error) {

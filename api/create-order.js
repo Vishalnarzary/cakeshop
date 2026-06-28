@@ -112,9 +112,9 @@ export default async function handler(req, res) {
 
     // 7. If free order, return immediately
     if (totalAmountPaise === 0) {
-        // Update order status to paid since it's free
-        await supabase.from('orders').update({ status: 'paid', payment_proof_url: 'free_order' }).eq('id', newOrder.id);
-        return res.status(200).json({ status: 'paid', order_id: newOrder.id, amount: 0 });
+        // Update order status to approved since it's free
+        await supabase.from('orders').update({ status: 'approved', payment_proof_url: 'free_order' }).eq('id', newOrder.id);
+        return res.status(200).json({ status: 'approved', order_id: newOrder.id, amount: 0 });
     }
 
     // 8. Create Razorpay order
