@@ -95,15 +95,14 @@ export default async function handler(req, res) {
     // Convert to paise for Razorpay
     const totalAmountPaise = totalAmount * 100;
 
-    // 6. Pre-create the order in Supabase with 'pending' status
+    // 6. Pre-create the order in Supabase with default status
     const { data: newOrder, error: insertError } = await supabase.from('orders').insert({
       user_id,
       product_id,
       address_id,
       quantity,
       payment_proof_url: 'pending',
-      status: 'pending',
-      discount_code: discount_code || '',
+      discount_code: discount_code || null,
       discount_amount: discountAmount,
       delivery_speed: delivery_speed || 'instant'
     }).select().single();
@@ -112,9 +111,8 @@ export default async function handler(req, res) {
 
     // 7. If free order, return immediately
     if (totalAmountPaise === 0) {
-        // Update order status to approved since it's free
-        await supabase.from('orders').update({ status: 'approved', payment_proof_url: 'free_order' }).eq('id', newOrder.id);
-        return res.status(200).json({ status: 'approved', order_id: newOrder.id, amount: 0 });
+        await supabase.from('orders').update({ payment_proof_url: 'free_order' }).eq('id', newOrder.id);
+        return res.status(200).json({ status: 'paid', order_id: newOrder.id, amount: 0 });
     }
 
     // 8. Create Razorpay order
