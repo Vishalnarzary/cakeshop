@@ -263,9 +263,13 @@
           <span class="label">Unit Price</span>
           <span class="value" id="summary-price">—</span>
         </div>
-        <div class="summary-row">
+        <div class="summary-row" style="align-items: center;">
           <span class="label">Quantity</span>
-          <span class="value">1</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 1rem; min-width: 32px;" onclick="changeQuantity(-1)">-</button>
+            <span class="value" id="summary-quantity" style="width: 20px; text-align: center;">1</span>
+            <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 1rem; min-width: 32px;" onclick="changeQuantity(1)">+</button>
+          </div>
         </div>
         <div class="summary-row">
           <span class="label">Delivery</span>
@@ -316,6 +320,7 @@
   let reservationExpiresAt = null; // absolute timestamp in ms (Date.now() based)
   let appliedDiscountCode = null;
   let appliedDiscountAmount = 0;
+  let orderQuantity = 1;
 
   const params = new URLSearchParams(window.location.search);
   const productId = params.get('product');
@@ -415,8 +420,9 @@
 
   function updateSummaryUI() {
     const price = Number(product.price);
+    const subtotal = price * orderQuantity;
     const fee = calcDeliveryFee(selectedDistance);
-    let total = price + fee - appliedDiscountAmount;
+    let total = subtotal + fee - appliedDiscountAmount;
     if (total < 0) total = 0;
 
     document.getElementById('summary-price').textContent = `₹${price.toLocaleString('en-IN')}`;
@@ -795,7 +801,7 @@
     try {
       // 1. Create order on backend
       const deliveryFee = calcDeliveryFee(selectedDistance);
-      let totalAmount = Math.round((product.price + deliveryFee - appliedDiscountAmount) * 100); // in paise
+      let totalAmount = Math.round(((product.price * orderQuantity) + deliveryFee - appliedDiscountAmount) * 100); // in paise
       if (totalAmount < 0) totalAmount = 0;
       const res = await fetch('/api/create-order', {
         method: 'POST',
@@ -840,6 +846,7 @@
               user_id: currentUser.id,
               product_id: product.id,
               address_id: addressId,
+              quantity: orderQuantity,
               payment_proof_url: response.razorpay_payment_id,
               status: 'pending',
               discount_code: appliedDiscountCode,
@@ -936,6 +943,26 @@
       appliedDiscountCode = data.code;
       appliedDiscountAmount = data.amount;
     }
+    updateSummaryUI();
+  }
+  async function changeQuantity(delta) {
+    if (orderQuantity + delta < 1) return;
+    
+    const newQty = orderQuantity + delta;
+    
+    const { data: resData, error: resErr } = await _supabase.rpc('reserve_stock', {
+      p_user_id: currentUser.id,
+      p_product_id: product.id,
+      p_req_quantity: newQty
+    });
+
+    if (resErr || !resData || !resData.success) {
+      showToast('Not enough stock available for this quantity.', 'error');
+      return;
+    }
+
+    orderQuantity = newQty;
+    document.getElementById('summary-quantity').textContent = orderQuantity;
     updateSummaryUI();
   }
 </script>
