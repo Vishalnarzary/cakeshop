@@ -37,6 +37,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Missing required order details' });
   }
 
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    return res.status(400).json({ message: 'Invalid quantity' });
+  }
+
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: 'Missing Authorization header' });
   const token = authHeader.replace('Bearer ', '');
@@ -67,7 +71,22 @@ export default async function handler(req, res) {
     // 2. Fetch product securely
     const { data: product, error: prodError } = await supabase.from('products').select('*').eq('id', product_id).single();
     if (prodError || !product) return res.status(404).json({ message: 'Product not found' });
-    if (product.quantity < quantity) return res.status(400).json({ message: 'Not enough stock available' });
+    
+    // Get user's active stock reservation for this product
+    const { data: reservation } = await supabase.from('stock_reservations')
+      .select('quantity')
+      .eq('user_id', user_id)
+      .eq('product_id', product_id)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+      
+    const reservedQuantity = reservation ? reservation.quantity : 0;
+    
+    // Add reserved quantity back to available quantity for validation
+    const effectiveStock = product.quantity + reservedQuantity;
+    if (effectiveStock < quantity) {
+      return res.status(400).json({ message: 'Not enough stock available' });
+    }
 
     // 3. Fetch address distance securely
     const { data: address, error: addrError } = await supabase.from('addresses').select('*').eq('id', address_id).eq('user_id', user_id).single();
