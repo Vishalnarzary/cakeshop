@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Cake Shop static site with Vercel API routes",
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
     "razorpay": "^2.9.4"
   }
 }

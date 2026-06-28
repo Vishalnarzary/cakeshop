@@ -1,17 +1,32 @@
 const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  const { order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+  if (!order_id || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     return res.status(400).json({ message: 'Missing required parameters' });
   }
 
+  // Basic Auth token check
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: 'Missing Authorization header' });
+  const token = authHeader.replace('Bearer ', '');
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ message: 'Server misconfiguration: Missing Supabase credentials' });
+  }
+
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
   try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ message: 'Unauthorized or token expired' });
+
     const secret = process.env.RAZORPAY_KEY_SECRET;
     
     const body = razorpay_order_id + "|" + razorpay_payment_id;
@@ -21,8 +36,23 @@ export default async function handler(req, res) {
       .digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      return res.status(200).json({ message: 'Payment verified successfully' });
+      // Signature is valid, securely update order status to 'paid' in DB
+      const { error: updateError } = await supabase.from('orders')
+          .update({ 
+              status: 'paid',
+              payment_proof_url: razorpay_payment_id
+          })
+          .eq('id', order_id)
+          .eq('user_id', user.id); // extra safety check
+
+      if (updateError) {
+          throw updateError;
+      }
+      return res.status(200).json({ message: 'Payment verified and order updated successfully' });
     } else {
+      // Signature is invalid
+      // Update order to failed
+      await supabase.from('orders').update({ status: 'failed' }).eq('id', order_id);
       return res.status(400).json({ message: 'Invalid signature' });
     }
   } catch (error) {
