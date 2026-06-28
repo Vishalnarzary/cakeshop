@@ -1094,8 +1094,6 @@
       const totalAmount = Math.round(((product.price * orderQuantity) + calcDeliveryFee(selectedDistance, selectedDeliverySpeed, product.price * orderQuantity) - appliedDiscountAmount));
       btnText.textContent = 'Place Order • ₹' + Math.max(0, totalAmount).toLocaleString('en-IN');
     }
-
-    }
   }
 
   async function logout() {
