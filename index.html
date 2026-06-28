@@ -948,7 +948,13 @@ function showToast(message, type = 'info') {
 }
 </script>
 
-<!-- Lightbox Overlay -->
+    <!-- Lightbox Overlay -->
+<style>
+@keyframes bounce-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+</style>
 <div id="product-lightbox" class="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
   <div class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); navigateLightbox(-1)">&#10094;</div>
@@ -963,7 +969,12 @@ function showToast(message, type = 'info') {
         <h2 id="lightbox-title">Product Name</h2>
         <div id="lightbox-price" class="lightbox-price">₹0</div>
       </div>
-      <p id="lightbox-desc" style="white-space: pre-wrap; max-height: 180px; overflow-y: auto; padding-right: 8px; margin-bottom: 0;">Description</p>
+      <div style="position: relative;">
+        <p id="lightbox-desc" onscroll="checkDescScroll()" style="white-space: pre-wrap; max-height: 180px; overflow-y: auto; padding-right: 8px; margin-bottom: 0;">Description</p>
+        <div id="lightbox-desc-fade" style="display:none; position:absolute; bottom:0; left:0; right:8px; height:36px; background:linear-gradient(transparent, var(--bg-card, #111)); pointer-events:none; align-items:flex-end; justify-content:center; padding-bottom:2px;">
+          <span style="animation: bounce-down 1.5s infinite; font-size: 14px; opacity: 0.8;">⬇️</span>
+        </div>
+      </div>
       <div class="lightbox-footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
         <div id="lightbox-stock" class="product-stock-text" style="font-size: 0.9rem;">In stock</div>
         <button id="lightbox-buy-btn" class="btn-buy" style="padding: 8px 18px; font-size: 0.85rem;">Buy Now</button>
@@ -974,6 +985,17 @@ function showToast(message, type = 'info') {
 
 <script>
 // Lightbox logic
+function checkDescScroll() {
+  const el = document.getElementById('lightbox-desc');
+  const fade = document.getElementById('lightbox-desc-fade');
+  if (!el || !fade) return;
+  if (el.scrollHeight > el.clientHeight && Math.ceil(el.scrollTop + el.clientHeight) < el.scrollHeight - 2) {
+    fade.style.display = 'flex';
+  } else {
+    fade.style.display = 'none';
+  }
+}
+
 function openLightbox(index) {
   if (!globalProducts || globalProducts.length === 0) return;
   currentLightboxIndex = index;
@@ -1015,6 +1037,11 @@ function updateLightbox() {
   document.getElementById('lightbox-title').textContent = p.name || '';
   document.getElementById('lightbox-price').textContent = '₹' + Number(p.price || 0).toLocaleString('en-IN');
   document.getElementById('lightbox-desc').textContent = formatDescription(p.description);
+  
+  // reset scroll and check indicator
+  const descEl = document.getElementById('lightbox-desc');
+  descEl.scrollTop = 0;
+  setTimeout(checkDescScroll, 10);
   
   const q = p.quantity;
   const isMobile = window.innerWidth <= 768;
