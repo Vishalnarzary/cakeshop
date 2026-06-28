@@ -909,7 +909,7 @@ function createProductCard(product, index) {
       <div class="product-right">
         <div class="product-info-container">
           <div class="product-info-trigger">i</div>
-          <div class="product-tooltip">${escHtml(product.description || 'Artisan handcrafted recipe.')}</div>
+          <div class="product-tooltip" style="white-space: pre-wrap;">${escHtml(formatDescription(product.description))}</div>
         </div>
         <div class="product-stock-text ${stockClass}">${stockLabel}</div>
         <button class="btn-buy" onclick="event.stopPropagation(); handleBuy('${product.id}')" ${btnDisabled ? 'disabled' : ''}>
@@ -930,6 +930,13 @@ function escHtml(str) {
   return String(str||'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDescription(desc) {
+  if (!desc) return 'Artisan handcrafted recipe.';
+  // Force newlines before common item attributes to create a list format
+  let formatted = desc.replace(/(Net Weight:|Calories:|Servings:|Party Size)/g, '\n$1');
+  return formatted.replace(/\n+/g, '\n').trim();
 }
 
 function showToast(message, type = 'info') {
@@ -956,7 +963,7 @@ function showToast(message, type = 'info') {
         <h2 id="lightbox-title">Product Name</h2>
         <div id="lightbox-price" class="lightbox-price">₹0</div>
       </div>
-      <p id="lightbox-desc">Description</p>
+      <p id="lightbox-desc" style="white-space: pre-wrap; max-height: 180px; overflow-y: auto; padding-right: 8px; margin-bottom: 0;">Description</p>
       <div class="lightbox-footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px;">
         <div id="lightbox-stock" class="product-stock-text" style="font-size: 0.9rem;">In stock</div>
         <button id="lightbox-buy-btn" class="btn-buy" style="padding: 8px 18px; font-size: 0.85rem;">Buy Now</button>
@@ -1007,7 +1014,7 @@ function updateLightbox() {
   
   document.getElementById('lightbox-title').textContent = p.name || '';
   document.getElementById('lightbox-price').textContent = '₹' + Number(p.price || 0).toLocaleString('en-IN');
-  document.getElementById('lightbox-desc').textContent = p.description || 'Artisan handcrafted recipe.';
+  document.getElementById('lightbox-desc').textContent = formatDescription(p.description);
   
   const q = p.quantity;
   const isMobile = window.innerWidth <= 768;
