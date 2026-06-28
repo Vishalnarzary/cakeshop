@@ -74,22 +74,16 @@ export default async function handler(req, res) {
     if (addrError || !address) return res.status(404).json({ message: 'Address not found or unauthorized' });
     const distanceKm = address.distance || 0;
 
-    // 4. Handle Disount Code (Hardcoded logic mapping frontend)
+    // 4. Handle Disount Code dynamically
     let discountAmount = 0;
     if (discount_code) {
       const codeUpper = discount_code.trim().toUpperCase();
-      const productPrice = Number(product.price);
-      if (codeUpper === 'WELCOME') {
-        discountAmount = productPrice * 0.10;
-        if (discountAmount > 100) discountAmount = 100;
-      } else if (codeUpper === 'CAKE100' && productPrice >= 1500) {
-        discountAmount = 100;
-      } else if (codeUpper === 'FLAT10') {
-        discountAmount = 10;
-      } else {
+      const { data: discountData, error: discountError } = await supabase.from('discount_codes').select('*').eq('code', codeUpper).single();
+      
+      if (discountError || !discountData) {
         return res.status(400).json({ message: 'Invalid or inapplicable discount code' });
       }
-      discountAmount = Math.round(discountAmount);
+      discountAmount = Math.round(Number(discountData.amount) || 0);
     }
 
     // 5. Calculate final total securely
