@@ -899,7 +899,7 @@ async function loadProducts() {
   if (settings) isShopOpen = settings.is_open;
 
   const { data: products, error } = await _supabase
-    .from('products').select('*').order('created_at', { ascending: false });
+    .from('products').select('*').order('price', { ascending: true });
 
   document.getElementById('loading-state').style.display = 'none';
 
