@@ -56,12 +56,11 @@ export default async function handler(req, res) {
   try {
     // 1. Verify User Token securely
     if (token === 'undefined' || !token) {
-        return res.status(401).json({ message: 'No valid token provided' });
+        return res.status(401).json({ message: 'No valid token provided. Please log out and log back in.' });
     }
     const { data: { user }, error: authError } = await authClient.auth.getUser(token);
     if (authError || !user) {
-        console.error('Auth Error:', authError, 'Token:', token ? token.substring(0, 10) + '...' : 'none');
-        return res.status(401).json({ message: 'Unauthorized or token expired', error: authError });
+        return res.status(401).json({ message: `Auth Error: ${authError?.message || 'User not found'}. Please log out and log back in.` });
     }
     const user_id = user.id;
 
