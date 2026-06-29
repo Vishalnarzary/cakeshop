@@ -137,6 +137,8 @@ ALTER TABLE public.products  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stock_reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.discount_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
 
 -- Helper function to avoid infinite recursion
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -227,6 +229,26 @@ CREATE POLICY "Users can manage own reservations"
   ON public.stock_reservations FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+-- DISCOUNT CODES: Anyone can read, only admins can manage
+CREATE POLICY "Anyone can view discount codes"
+  ON public.discount_codes FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage discount codes"
+  ON public.discount_codes FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+-- STORE SETTINGS: Anyone can read, only admins can manage
+CREATE POLICY "Anyone can view store settings"
+  ON public.store_settings FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage store settings"
+  ON public.store_settings FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- ============================================================
 -- 6. STORAGE BUCKETS
