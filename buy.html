@@ -877,7 +877,11 @@
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/ola-autocomplete?input=${encodeURIComponent(val)}`);
+        const session = await _supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        const res = await fetch(`/api/ola-autocomplete?input=${encodeURIComponent(val)}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         const data = await res.json();
         
         suggBox.innerHTML = '';
@@ -931,9 +935,14 @@
       document.getElementById('distance-display').style.display = 'block';
       document.getElementById('distance-val').textContent = 'Calculating...';
       try {
+        const session = await _supabase.auth.getSession();
+        const token = session.data.session?.access_token;
         const res = await fetch('/api/ola-distance', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ destination: dest })
         });
         const data = await res.json();
@@ -1136,16 +1145,29 @@
     msgEl.textContent = 'Checking...';
     
     const { data, error } = await _supabase.from('discount_codes').select('*').eq('code', input).single();
-    if (error || !data) {
+    if (error || !data || !data.is_active) {
       msgEl.style.color = 'var(--danger)';
       msgEl.textContent = 'Invalid or expired code.';
       appliedDiscountCode = null;
       appliedDiscountAmount = 0;
     } else {
-      msgEl.style.color = 'var(--success)';
-      msgEl.textContent = 'Discount applied!';
-      appliedDiscountCode = data.code;
-      appliedDiscountAmount = data.amount;
+      const subtotal = product.price * orderQuantity;
+      if (Number(data.min_order_value) > subtotal) {
+        msgEl.style.color = 'var(--danger)';
+        msgEl.textContent = `Minimum order value is ₹${data.min_order_value}.`;
+        appliedDiscountCode = null;
+        appliedDiscountAmount = 0;
+      } else if (data.used_count >= data.max_uses) {
+        msgEl.style.color = 'var(--danger)';
+        msgEl.textContent = 'Code usage limit reached.';
+        appliedDiscountCode = null;
+        appliedDiscountAmount = 0;
+      } else {
+        msgEl.style.color = 'var(--success)';
+        msgEl.textContent = 'Discount applied!';
+        appliedDiscountCode = data.code;
+        appliedDiscountAmount = data.amount;
+      }
     }
     updateSummaryUI();
   }

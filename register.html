@@ -140,15 +140,7 @@
       return;
     }
 
-    // Insert profile row now that we are successfully verified and logged in
-    if (data.user) {
-      await _supabase.from('profiles').insert({
-        id: data.user.id,
-        email: currentSignupEmail,
-        name: currentSignupName,
-        role: 'user'
-      });
-    }
+    // Trigger creates profile automatically so we don't need to insert here
 
     showSuccess('Account confirmed! Redirecting...');
     setTimeout(() => window.location.href = 'index.html', 1500);
@@ -156,13 +148,13 @@
 
   function showError(msg) {
     const el = document.getElementById('auth-error');
-    el.innerHTML = `❌ ${msg}`;
+    el.textContent = `❌ ${msg}`;
     el.style.display = 'flex';
   }
 
   function showSuccess(msg) {
     const el = document.getElementById('auth-success');
-    el.innerHTML = `✅ ${msg}`;
+    el.textContent = `✅ ${msg}`;
     el.style.display = 'flex';
   }
 

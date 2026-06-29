@@ -151,7 +151,7 @@
       return;
     }
 
-    handleSuccessfulLogin(data, email);
+    handleSuccessfulLogin(data, email, btn, btnText);
   }
 
   let currentOtpEmail = '';
@@ -180,10 +180,10 @@
       return;
     }
 
-    handleSuccessfulLogin(data, currentOtpEmail);
+    handleSuccessfulLogin(data, currentOtpEmail, btn, btnText);
   }
 
-  async function handleSuccessfulLogin(data, email) {
+  async function handleSuccessfulLogin(data, email, btn, btnText) {
     // Fetch profile — auto-upsert if missing (handles manually-created Supabase users)
     let { data: profile, error: profileError } = await _supabase
       .from('profiles')
@@ -193,7 +193,7 @@
 
     if (!profile) {
       // Profile row missing or unreadable — upsert it (ON CONFLICT DO UPDATE avoids duplicate key errors)
-      const inferredRole = activeTab === 'admin' ? 'admin' : 'user';
+      const inferredRole = 'user'; // Never auto-grant admin from client-side
       const { data: upserted, error: upsertError } = await _supabase
         .from('profiles')
         .upsert(
@@ -239,13 +239,13 @@
 
   function showError(msg) {
     const el = document.getElementById('auth-error');
-    el.innerHTML = `❌ ${msg}`;
+    el.textContent = `❌ ${msg}`;
     el.style.display = 'flex';
   }
 
   function showSuccess(msg) {
     const el = document.getElementById('auth-success');
-    el.innerHTML = `✅ ${msg}`;
+    el.textContent = `✅ ${msg}`;
     el.style.display = 'flex';
   }
 

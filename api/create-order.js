@@ -1,5 +1,5 @@
-const Razorpay = require('razorpay');
-const { createClient } = require('@supabase/supabase-js');
+import Razorpay from 'razorpay';
+import { createClient } from '@supabase/supabase-js';
 
 // Shared delivery fee calculation logic from frontend
 function calcDeliveryFee(distanceKm, speed, subtotal) {
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   // Use the public Anon Key to verify the user token properly
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzZmt6cGx0dmp2eWppcWprcWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTUxNTMsImV4cCI6MjA5ODAzMTE1M30.ryHeukWAXmg6VYBgUK9Rsmsc9etKDlKyX7x8lTgShBk';
+  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
   const authClient = createClient(process.env.SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false }
   });
@@ -95,18 +95,29 @@ export default async function handler(req, res) {
 
     // 4. Handle Disount Code dynamically
     let discountAmount = 0;
+    const subtotal = Number(product.price) * quantity;
     if (discount_code) {
       const codeUpper = discount_code.trim().toUpperCase();
       const { data: discountData, error: discountError } = await supabase.from('discount_codes').select('*').eq('code', codeUpper).single();
       
-      if (discountError || !discountData) {
+      if (discountError || !discountData || !discountData.is_active) {
         return res.status(400).json({ message: 'Invalid or inapplicable discount code' });
       }
+      
+      if (Number(discountData.min_order_value) > subtotal) {
+        return res.status(400).json({ message: `Minimum order value for this discount is ₹${discountData.min_order_value}` });
+      }
+      if (discountData.used_count >= discountData.max_uses) {
+        return res.status(400).json({ message: 'Discount code usage limit reached' });
+      }
+      
       discountAmount = Math.round(Number(discountData.amount) || 0);
+
+      // Increment used count
+      await supabase.from('discount_codes').update({ used_count: discountData.used_count + 1 }).eq('id', discountData.id);
     }
 
     // 5. Calculate final total securely
-    const subtotal = Number(product.price) * quantity;
     const deliveryFee = calcDeliveryFee(distanceKm, delivery_speed, subtotal);
     let totalAmount = Math.round(subtotal + deliveryFee - discountAmount);
     if (totalAmount < 0) totalAmount = 0;
@@ -163,6 +174,6 @@ export default async function handler(req, res) {
     if (error?.details) errorMsg += ' - ' + error.details;
     if (error?.hint) errorMsg += ' (' + error.hint + ')';
     
-    return res.status(500).json({ message: errorMsg, raw_error: error });
+    return res.status(500).json({ message: errorMsg });
   }
 }

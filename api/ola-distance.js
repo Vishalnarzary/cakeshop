@@ -1,6 +1,25 @@
+import { createClient } from '@supabase/supabase-js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: 'Missing Authorization header' });
+  const token = authHeader.replace('Bearer ', '');
+  
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+    return res.status(500).json({ message: 'Server misconfiguration' });
+  }
+  
+  const authClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  
+  const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+  if (authError || !user) {
+      return res.status(401).json({ message: 'Unauthorized' });
   }
 
   const { destination } = req.body;
@@ -8,7 +27,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.OLA_MAPS_API_KEY;
   // Default origin if not set in environment
-  const rawOrigin = process.env.BAKERY_ORIGIN_COORDS || '12.971598,77.594562'; 
+  const rawOrigin = process.env.BAKERY_ORIGIN_COORDS || '22.572510,88.4937940'; 
   
   // Clean coordinates to remove any spaces, parentheses, etc. (e.g. "(22.57,88.49)" -> "22.57,88.49")
   const origin = rawOrigin.replace(/[^\d.,-]/g, '');

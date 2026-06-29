@@ -78,8 +78,33 @@ CREATE TABLE IF NOT EXISTS public.orders (
   address_id         UUID REFERENCES public.addresses(id) ON DELETE SET NULL,
   quantity           INTEGER NOT NULL DEFAULT 1,
   payment_proof_url  TEXT,
-  status             TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  status             TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'rejected')),
+  delivery_speed     TEXT DEFAULT 'instant',
+  discount_code      TEXT,
+  discount_amount    INTEGER DEFAULT 0,
   created_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 4.1. DISCOUNT CODES TABLE
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.discount_codes (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code            TEXT NOT NULL UNIQUE,
+  amount          NUMERIC(10, 2) NOT NULL,
+  min_order_value NUMERIC(10, 2) DEFAULT 0,
+  max_uses        INTEGER DEFAULT 100,
+  used_count      INTEGER DEFAULT 0,
+  is_active       BOOLEAN DEFAULT true,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 4.2. STORE SETTINGS TABLE
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.store_settings (
+  id          TEXT PRIMARY KEY,
+  is_open     BOOLEAN DEFAULT true
 );
 
 -- ============================================================
@@ -161,9 +186,7 @@ CREATE POLICY "Admins can delete products"
   USING (public.is_admin());
 
 -- Allow authenticated users to decrement stock (for order submission)
-CREATE POLICY "Authenticated users can update product quantity"
-  ON public.products FOR UPDATE
-  USING (auth.role() = 'authenticated');
+-- POLICY REMOVED: This was a security vulnerability. Stock updates should only happen via reserve_stock RPC.
 
 -- ADDRESSES: Users manage their own addresses
 CREATE POLICY "Users can view own addresses"
