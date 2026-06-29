@@ -57,6 +57,16 @@ export default async function handler(req, res) {
       if (updateError) {
           throw updateError;
       }
+      
+      // Increment discount usage if applicable
+      const { data: order } = await supabase.from('orders').select('discount_code').eq('id', order_id).single();
+      if (order && order.discount_code) {
+        const { data: discount } = await supabase.from('discount_codes').select('id, used_count').eq('code', order.discount_code).single();
+        if (discount) {
+          await supabase.from('discount_codes').update({ used_count: discount.used_count + 1 }).eq('id', discount.id);
+        }
+      }
+      
       return res.status(200).json({ message: 'Payment verified and order updated successfully' });
     } else {
       // Signature is invalid

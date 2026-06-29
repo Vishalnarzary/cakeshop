@@ -112,9 +112,6 @@ export default async function handler(req, res) {
       }
       
       discountAmount = Math.round(Number(discountData.amount) || 0);
-
-      // Increment used count
-      await supabase.from('discount_codes').update({ used_count: discountData.used_count + 1 }).eq('id', discountData.id);
     }
 
     // 5. Calculate final total securely
