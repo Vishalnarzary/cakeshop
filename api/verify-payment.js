@@ -1,5 +1,5 @@
-import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

@@ -1,5 +1,5 @@
-import Razorpay from 'razorpay';
-import { createClient } from '@supabase/supabase-js';
+const Razorpay = require('razorpay');
+const { createClient } = require('@supabase/supabase-js');
 
 // Shared delivery fee calculation logic from frontend
 function calcDeliveryFee(distanceKm, speed, subtotal) {
