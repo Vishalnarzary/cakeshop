@@ -337,9 +337,11 @@
         </div>
         <!-- Time range row -->
         <div id="auto-time-range" style="display:none; align-items:center; gap:8px; flex-wrap:wrap;">
-          <input type="time" id="auto-open-time" class="form-control" style="flex:1; min-width:90px; padding:6px 10px; font-size:0.85rem;">
+          <input type="time" id="auto-open-time" class="form-control" style="flex:1; min-width:90px; padding:6px 10px; font-size:0.85rem;"
+            oninput="localStorage.setItem('at_open', this.value)">
           <span style="font-size:0.8rem; color:var(--text-muted);">to</span>
-          <input type="time" id="auto-close-time" class="form-control" style="flex:1; min-width:90px; padding:6px 10px; font-size:0.85rem;">
+          <input type="time" id="auto-close-time" class="form-control" style="flex:1; min-width:90px; padding:6px 10px; font-size:0.85rem;"
+            oninput="localStorage.setItem('at_close', this.value)">
           <button onclick="saveAutoTimeSetting()" style="padding:6px 14px; background:var(--gradient-main); color:#fff; border:none; border-radius:var(--radius-sm); font-size:0.8rem; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">Apply</button>
         </div>
         <div id="auto-time-status" style="font-size:0.75rem; color:var(--text-muted); display:none;"></div>
@@ -1000,30 +1002,45 @@
   }
 
   async function fetchShopStatus() {
-    const { data } = await _supabase.from('store_settings').select('*').eq('id', 'shop_status').single();
-    if (data) {
-      isShopOpen = data.is_open;
-      updateShopToggleUI();
+    // --- 1. Restore from localStorage FIRST (instant, no network) ---
+    const lsEnabled = localStorage.getItem('at_enabled') === 'true';
+    const lsOpen    = localStorage.getItem('at_open')  || '';
+    const lsClose   = localStorage.getItem('at_close') || '';
 
-      // Restore auto-time settings — prefer DB values, fallback to localStorage
+    if (lsEnabled) {
       const autoToggle = document.getElementById('auto-time-toggle');
       const rangeDiv   = document.getElementById('auto-time-range');
       const statusDiv  = document.getElementById('auto-time-status');
       const openInp    = document.getElementById('auto-open-time');
       const closeInp   = document.getElementById('auto-close-time');
+      if (autoToggle) autoToggle.checked = true;
+      if (rangeDiv)   rangeDiv.style.display  = 'flex';
+      if (statusDiv)  statusDiv.style.display = 'block';
+      if (openInp  && lsOpen)  openInp.value  = lsOpen;
+      if (closeInp && lsClose) closeInp.value = lsClose;
+      runAutoTimeCheck();
+    }
 
-      // Get values: DB first, then localStorage fallback
-      const autoEnabled = data.auto_time_enabled
-        ?? (localStorage.getItem('at_enabled') === 'true');
-      const openTime  = data.open_time  || localStorage.getItem('at_open')  || '';
-      const closeTime = data.close_time || localStorage.getItem('at_close') || '';
+    // --- 2. Then fetch from DB (overrides localStorage if DB has values) ---
+    const { data } = await _supabase.from('store_settings').select('*').eq('id', 'shop_status').single();
+    if (data) {
+      isShopOpen = data.is_open;
+      updateShopToggleUI();
 
-      if (autoToggle && autoEnabled) {
-        autoToggle.checked = true;
-        if (rangeDiv)  rangeDiv.style.display  = 'flex';
-        if (statusDiv) statusDiv.style.display = 'block';
-        if (openInp  && openTime)  openInp.value  = openTime;
-        if (closeInp && closeTime) closeInp.value = closeTime;
+      // Override inputs with DB values if they exist
+      const openInp  = document.getElementById('auto-open-time');
+      const closeInp = document.getElementById('auto-close-time');
+      if (data.open_time  && openInp)  openInp.value  = data.open_time;
+      if (data.close_time && closeInp) closeInp.value = data.close_time;
+
+      // If DB says auto is ON but localStorage didn't, restore it now
+      if (data.auto_time_enabled && !lsEnabled) {
+        const autoToggle = document.getElementById('auto-time-toggle');
+        const rangeDiv   = document.getElementById('auto-time-range');
+        const statusDiv  = document.getElementById('auto-time-status');
+        if (autoToggle) autoToggle.checked = true;
+        if (rangeDiv)   rangeDiv.style.display  = 'flex';
+        if (statusDiv)  statusDiv.style.display = 'block';
         runAutoTimeCheck();
       }
     }
