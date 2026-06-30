@@ -337,9 +337,10 @@
         </div>
         <!-- Time range row -->
         <div id="auto-time-range" style="display:none; align-items:center; gap:8px; flex-wrap:wrap;">
-          <input type="time" id="auto-open-time" class="form-control" style="flex:1; min-width:100px; padding:6px 10px; font-size:0.85rem;" onchange="saveAutoTimeSetting()">
+          <input type="time" id="auto-open-time" class="form-control" style="flex:1; min-width:90px; padding:6px 10px; font-size:0.85rem;">
           <span style="font-size:0.8rem; color:var(--text-muted);">to</span>
-          <input type="time" id="auto-close-time" class="form-control" style="flex:1; min-width:100px; padding:6px 10px; font-size:0.85rem;" onchange="saveAutoTimeSetting()">
+          <input type="time" id="auto-close-time" class="form-control" style="flex:1; min-width:90px; padding:6px 10px; font-size:0.85rem;">
+          <button onclick="saveAutoTimeSetting()" style="padding:6px 14px; background:var(--gradient-main); color:#fff; border:none; border-radius:var(--radius-sm); font-size:0.8rem; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">Apply</button>
         </div>
         <div id="auto-time-status" style="font-size:0.75rem; color:var(--text-muted); display:none;"></div>
       </div>
@@ -1100,6 +1101,8 @@
     if (error) {
       // DB columns may not exist yet — show warning but keep working via localStorage
       showToast('⚠️ Times saved locally only. Run the SQL migration in Supabase to persist across devices.', 'warning');
+    } else if (autoOn) {
+      showToast('✅ Auto Time saved — ' + openTime + ' to ' + closeTime, 'success');
     }
 
     if (autoOn) {
