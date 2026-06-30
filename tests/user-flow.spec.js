@@ -102,7 +102,7 @@ test.describe('Tier 3 — Orders Page (Authenticated)', () => {
     expect(page.url()).not.toContain('login.html');
 
     // Either shows orders or the empty state
-    const content = page.locator('.order-card, [class*="order"], text=No orders, text=Browse').first();
+    const content = page.locator('.order-card, [class*="order"], :text("No orders"), :text("Browse")').first();
     await expect(content).toBeVisible({ timeout: 8000 });
   });
 });
@@ -142,7 +142,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
     await expect(page.locator('text=500').first()).toBeVisible({ timeout: 5000 });
 
     // Timer should be visible (10:00 countdown)
-    const timer = page.locator('[id*="timer"], [class*="timer"], text=remaining').first();
+    const timer = page.locator('[id*="timer"], [class*="timer"], :text("remaining")').first();
     await expect(timer).toBeVisible({ timeout: 5000 }).catch(() => {
       // Timer might use different approach — skip if not found
     });
@@ -171,7 +171,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
       await page.waitForTimeout(2000);
 
       // Discount of ₹50 should appear
-      await expect(page.locator('text=-50, text=50, text=TESTDEAL50').first()).toBeVisible({ timeout: 5000 });
+      await expect(page.locator(':text("-50"), :text("50"), :text("TESTDEAL50")').first()).toBeVisible({ timeout: 5000 });
     } else {
       test.skip();
     }
@@ -199,7 +199,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
 
       // An error message should appear
       await expect(
-        page.locator('.error, .toast-error, [class*="error"], text=invalid, text=expired, text=not valid').first()
+        page.locator('.error, .toast-error, [class*="error"], :text("invalid"), :text("expired"), :text("not valid")').first()
       ).toBeVisible({ timeout: 5000 });
     } else {
       test.skip();
@@ -228,7 +228,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
 
       // Error about max uses exceeded
       await expect(
-        page.locator('.error, .toast-error, [class*="error"], text=expired, text=max, text=limit').first()
+        page.locator('.error, .toast-error, [class*="error"], :text("expired"), :text("max"), :text("limit")').first()
       ).toBeVisible({ timeout: 5000 });
     } else {
       test.skip();

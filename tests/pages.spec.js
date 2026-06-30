@@ -57,7 +57,7 @@ test.describe('Login Page', () => {
     await page.waitForTimeout(500);
 
     // Admin tab should NOT be visible by default
-    const adminTab = page.locator('#admin-tab, [data-tab="admin"], text=Admin Login').first();
+    const adminTab = page.locator('#admin-tab, [data-tab="admin"], :text("Admin Login")').first();
     await expect(adminTab).not.toBeVisible({ timeout: 3000 }).catch(() => {
       // Tab might not exist at all — that's also correct
     });
@@ -81,7 +81,7 @@ test.describe('Login Page', () => {
     await page.waitForTimeout(1000);
 
     // Admin tab should now be visible
-    const adminTab = page.locator('#admin-tab, [data-tab="admin"], text=Admin').first();
+    const adminTab = page.locator('#admin-tab, [data-tab="admin"], :text("Admin")').first();
     await expect(adminTab).toBeVisible({ timeout: 5000 });
   });
 
@@ -95,7 +95,7 @@ test.describe('Login Page', () => {
 
     // An error message should appear
     await expect(
-      page.locator('.error, .toast-error, [class*="error"], text=Invalid').first()
+      page.locator('.error, .toast-error, [class*="error"], :text("Invalid")').first()
     ).toBeVisible({ timeout: 8000 });
   });
 });
@@ -126,7 +126,7 @@ test.describe('Register Page', () => {
 
     // Error about password mismatch
     await expect(
-      page.locator('.error, [class*="error"], text=match, text=password').first()
+      page.locator('.error, [class*="error"], :text("match"), :text("password")').first()
     ).toBeVisible({ timeout: 5000 });
   });
 });

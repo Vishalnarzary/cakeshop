@@ -6,72 +6,24 @@
 
 # Test info
 
-- Name: user-flow.spec.js >> Tier 3 — Checkout (Buy Page) >> Razorpay checkout button is present (payment modal test)
-- Location: tests\user-flow.spec.js:238:3
+- Name: user-flow.spec.js >> Tier 3 — Business Logic Sanity >> delivery fee is non-negative for any valid distance
+- Location: tests\user-flow.spec.js:256:3
 
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
+Error: expect(received).not.toBe(expected) // Object.is equality
 
-Locator: locator('button:has-text("Pay"), button:has-text("Place Order"), button:has-text("Order"), #pay-btn, #submit-order').first()
-Expected: visible
-Timeout: 8000ms
-Error: element(s) not found
-
-Call log:
-  - Expect "toBeVisible" with timeout 8000ms
-  - waiting for locator('button:has-text("Pay"), button:has-text("Place Order"), button:has-text("Order"), #pay-btn, #submit-order').first()
-
-```
-
-```yaml
-- navigation:
-  - link "C Caramel":
-    - /url: index.html
-- heading "Cake Shop" [level=1]
-- paragraph: Sign in to your account
-- button "👤 User Login"
-- text: Email Address *
-- textbox "Email Address *":
-  - /placeholder: you@example.com
-- text: Password *
-- textbox "Password *":
-  - /placeholder: Enter your password
-- button "Sign In"
-- text: Don't have an account?
-- link "Create one":
-  - /url: register.html
+Expected: not 500
 ```
 
 # Test source
 
 ```ts
-  150 | 
-  151 |   test('applying valid discount code reduces total price', async ({ page }) => {
-  152 |     const userSession = await getUserSession();
-  153 |     await injectSession(page, userSession);
-  154 | 
-  155 |     await page.goto(`/buy.html?product=${TEST_PRODUCT_ID}`);
-  156 |     await page.waitForTimeout(4000);
-  157 | 
-  158 |     // Find discount input field
-  159 |     const discountInput = page.locator(
-  160 |       'input[placeholder*="discount" i], input[placeholder*="code" i], #discount-input, #coupon-input'
-  161 |     ).first();
-  162 | 
-  163 |     if (await discountInput.isVisible()) {
-  164 |       await discountInput.fill('TESTDEAL50');
-  165 | 
-  166 |       // Click Apply button
-  167 |       const applyBtn = page.locator(
-  168 |         'button:has-text("Apply"), button:has-text("Validate"), #apply-discount'
-  169 |       ).first();
-  170 |       await applyBtn.click();
   171 |       await page.waitForTimeout(2000);
   172 | 
   173 |       // Discount of ₹50 should appear
-  174 |       await expect(page.locator('text=-50, text=50, text=TESTDEAL50').first()).toBeVisible({ timeout: 5000 });
+  174 |       await expect(page.locator(':text("-50"), :text("50"), :text("TESTDEAL50")').first()).toBeVisible({ timeout: 5000 });
   175 |     } else {
   176 |       test.skip();
   177 |     }
@@ -99,7 +51,7 @@ Call log:
   199 | 
   200 |       // An error message should appear
   201 |       await expect(
-  202 |         page.locator('.error, .toast-error, [class*="error"], text=invalid, text=expired, text=not valid').first()
+  202 |         page.locator('.error, .toast-error, [class*="error"], :text("invalid"), :text("expired"), :text("not valid")').first()
   203 |       ).toBeVisible({ timeout: 5000 });
   204 |     } else {
   205 |       test.skip();
@@ -128,7 +80,7 @@ Call log:
   228 | 
   229 |       // Error about max uses exceeded
   230 |       await expect(
-  231 |         page.locator('.error, .toast-error, [class*="error"], text=expired, text=max, text=limit').first()
+  231 |         page.locator('.error, .toast-error, [class*="error"], :text("expired"), :text("max"), :text("limit")').first()
   232 |       ).toBeVisible({ timeout: 5000 });
   233 |     } else {
   234 |       test.skip();
@@ -147,8 +99,7 @@ Call log:
   247 |       'button:has-text("Pay"), button:has-text("Place Order"), button:has-text("Order"), #pay-btn, #submit-order'
   248 |     ).first();
   249 | 
-> 250 |     await expect(payBtn).toBeVisible({ timeout: 8000 });
-      |                          ^ Error: expect(locator).toBeVisible() failed
+  250 |     await expect(payBtn).toBeVisible({ timeout: 8000 });
   251 |   });
   252 | });
   253 | 
@@ -169,7 +120,8 @@ Call log:
   268 |       }
   269 |     });
   270 |     // Should get 401, not 500 (no server crash)
-  271 |     expect(res.status()).not.toBe(500);
+> 271 |     expect(res.status()).not.toBe(500);
+      |                              ^ Error: expect(received).not.toBe(expected) // Object.is equality
   272 |   });
   273 | });
   274 | 

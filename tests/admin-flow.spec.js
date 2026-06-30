@@ -46,7 +46,7 @@ test.describe('Tier 3 — Admin Flow', () => {
     await expect(page.locator('.stat-card, [class*="stat"]').first()).toBeVisible({ timeout: 10000 });
 
     // Navigation tabs
-    await expect(page.locator('text=Products, text=Orders').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator(':text("Products"), :text("Orders")').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('stats grid shows numeric values (not blank)', async ({ page }) => {
@@ -134,7 +134,7 @@ test.describe('Tier 3 — Admin Flow', () => {
     await page.waitForTimeout(3000);
 
     // Either shows orders table or "no orders" empty state
-    const content = page.locator('.order-row, tr, .empty-state, text=No orders').first();
+    const content = page.locator('.order-row, tr, .empty-state, :text("No orders")').first();
     await expect(content).toBeVisible({ timeout: 8000 });
   });
 
