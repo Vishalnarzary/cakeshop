@@ -1003,16 +1003,26 @@
     if (data) {
       isShopOpen = data.is_open;
       updateShopToggleUI();
-      // Restore auto-time settings
+
+      // Restore auto-time settings — prefer DB values, fallback to localStorage
       const autoToggle = document.getElementById('auto-time-toggle');
       const rangeDiv   = document.getElementById('auto-time-range');
+      const statusDiv  = document.getElementById('auto-time-status');
       const openInp    = document.getElementById('auto-open-time');
       const closeInp   = document.getElementById('auto-close-time');
-      if (autoToggle && data.auto_time_enabled) {
+
+      // Get values: DB first, then localStorage fallback
+      const autoEnabled = data.auto_time_enabled
+        ?? (localStorage.getItem('at_enabled') === 'true');
+      const openTime  = data.open_time  || localStorage.getItem('at_open')  || '';
+      const closeTime = data.close_time || localStorage.getItem('at_close') || '';
+
+      if (autoToggle && autoEnabled) {
         autoToggle.checked = true;
-        if (rangeDiv) rangeDiv.style.display = 'flex';
-        if (openInp  && data.open_time)  openInp.value  = data.open_time;
-        if (closeInp && data.close_time) closeInp.value = data.close_time;
+        if (rangeDiv)  rangeDiv.style.display  = 'flex';
+        if (statusDiv) statusDiv.style.display = 'block';
+        if (openInp  && openTime)  openInp.value  = openTime;
+        if (closeInp && closeTime) closeInp.value = closeTime;
         runAutoTimeCheck();
       }
     }
@@ -1075,16 +1085,29 @@
     if (rangeDiv) rangeDiv.style.display = autoOn ? 'flex' : 'none';
     if (statusDiv) statusDiv.style.display = autoOn ? 'block' : 'none';
 
-    // Persist to DB
-    await _supabase.from('store_settings').update({
+    // Always save to localStorage first (instant, never fails)
+    localStorage.setItem('at_enabled', autoOn);
+    localStorage.setItem('at_open',    openTime);
+    localStorage.setItem('at_close',   closeTime);
+
+    // Then persist to DB (so it works across devices/browsers)
+    const { error } = await _supabase.from('store_settings').update({
       auto_time_enabled: autoOn,
       open_time:  openTime  || null,
       close_time: closeTime || null
     }).eq('id', 'shop_status');
 
+    if (error) {
+      // DB columns may not exist yet — show warning but keep working via localStorage
+      showToast('⚠️ Times saved locally only. Run the SQL migration in Supabase to persist across devices.', 'warning');
+    }
+
     if (autoOn) {
       runAutoTimeCheck();
     } else {
+      localStorage.removeItem('at_enabled');
+      localStorage.removeItem('at_open');
+      localStorage.removeItem('at_close');
       if (_autoTimeTimer) { clearInterval(_autoTimeTimer); _autoTimeTimer = null; }
       if (statusDiv) statusDiv.style.display = 'none';
       showToast('Auto Time disabled. Manual toggle is now active.', 'success');
