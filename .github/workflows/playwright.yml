@@ -33,6 +33,16 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # ── 5. Wait for Vercel to deploy the latest push ─────────
+      #    This polls your Vercel deployment until it's "Ready"
+      - name: Wait for Vercel deployment
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        id: wait-for-vercel
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 300
+          check_interval: 15
+        continue-on-error: true
 
       # ── 6. Set the target URL for tests ──────────────────────
       - name: Set site URL
