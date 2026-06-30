@@ -1,0 +1,137 @@
+{
+  "total_count": 1,
+  "jobs": [
+    {
+      "id": 84283880090,
+      "run_id": 28442578728,
+      "workflow_name": "Playwright Tests",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/Vishalnarzary/cakeshop/actions/runs/28442578728",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOTGKm2s8AAAATn7Xymg",
+      "head_sha": "42a9e05e4decc6223d38b0a61f2955e133d0b109",
+      "url": "https://api.github.com/repos/Vishalnarzary/cakeshop/actions/jobs/84283880090",
+      "html_url": "https://github.com/Vishalnarzary/cakeshop/actions/runs/28442578728/job/84283880090",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-06-30T11:58:56Z",
+      "started_at": "2026-06-30T11:58:58Z",
+      "completed_at": "2026-06-30T12:02:06Z",
+      "name": "Run Playwright Tests",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-06-30T11:58:58Z",
+          "completed_at": "2026-06-30T11:58:59Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-06-30T11:58:59Z",
+          "completed_at": "2026-06-30T11:59:01Z"
+        },
+        {
+          "name": "Set up Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-06-30T11:59:01Z",
+          "completed_at": "2026-06-30T11:59:05Z"
+        },
+        {
+          "name": "Install npm dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-06-30T11:59:05Z",
+          "completed_at": "2026-06-30T11:59:06Z"
+        },
+        {
+          "name": "Install Playwright browsers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-06-30T11:59:06Z",
+          "completed_at": "2026-06-30T11:59:35Z"
+        },
+        {
+          "name": "Wait for Vercel deployment",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-06-30T11:59:35Z",
+          "completed_at": "2026-06-30T11:59:36Z"
+        },
+        {
+          "name": "Set site URL",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-06-30T11:59:36Z",
+          "completed_at": "2026-06-30T11:59:36Z"
+        },
+        {
+          "name": "Run Playwright tests",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8,
+          "started_at": "2026-06-30T11:59:36Z",
+          "completed_at": "2026-06-30T12:02:02Z"
+        },
+        {
+          "name": "Upload test failure artifacts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-06-30T12:02:02Z",
+          "completed_at": "2026-06-30T12:02:04Z"
+        },
+        {
+          "name": "Upload Playwright HTML report",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-06-30T12:02:04Z",
+          "completed_at": "2026-06-30T12:02:05Z"
+        },
+        {
+          "name": "Post Set up Node.js",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 19,
+          "started_at": "2026-06-30T12:02:05Z",
+          "completed_at": "2026-06-30T12:02:05Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-06-30T12:02:05Z",
+          "completed_at": "2026-06-30T12:02:05Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-06-30T12:02:05Z",
+          "completed_at": "2026-06-30T12:02:05Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/Vishalnarzary/cakeshop/check-runs/84283880090",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000032,
+      "runner_name": "GitHub Actions 1000000032",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}
