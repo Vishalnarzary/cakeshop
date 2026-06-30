@@ -315,12 +315,33 @@
         <h1>Admin Dashboard</h1>
         <p>Manage your products and review customer orders</p>
       </div>
-      <div style="display:flex; align-items:center; gap:12px; background:var(--bg-card); padding:10px 16px; border-radius:var(--radius-lg); border:1px solid var(--border-glass);">
-        <span style="font-weight:600; font-size:0.9rem;" id="shop-status-text">Shop Closed</span>
-        <label class="switch">
-          <input type="checkbox" id="shop-toggle" onchange="toggleShopStatus(event)">
-          <span class="slider"><span class="slider-ball"></span></span>
-        </label>
+      <!-- Shop Status Toggle -->
+      <div style="display:flex; flex-direction:column; gap:10px; background:var(--bg-card); padding:14px 18px; border-radius:var(--radius-lg); border:1px solid var(--border-glass); min-width:260px;">
+        <!-- Manual toggle row -->
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-weight:600; font-size:0.9rem;" id="shop-status-text">Shop Closed</span>
+          <label class="switch" style="margin-left:auto;">
+            <input type="checkbox" id="shop-toggle" onchange="toggleShopStatus(event)">
+            <span class="slider"><span class="slider-ball"></span></span>
+          </label>
+        </div>
+        <!-- Auto-time divider -->
+        <div style="height:1px; background:var(--border-glass);"></div>
+        <!-- Auto-time row -->
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:0.82rem; color:var(--text-secondary); flex:1;">⏰ Auto Time</span>
+          <label class="switch">
+            <input type="checkbox" id="auto-time-toggle" onchange="saveAutoTimeSetting()">
+            <span class="slider"><span class="slider-ball"></span></span>
+          </label>
+        </div>
+        <!-- Time range row -->
+        <div id="auto-time-range" style="display:none; align-items:center; gap:8px; flex-wrap:wrap;">
+          <input type="time" id="auto-open-time" class="form-control" style="flex:1; min-width:100px; padding:6px 10px; font-size:0.85rem;" onchange="saveAutoTimeSetting()">
+          <span style="font-size:0.8rem; color:var(--text-muted);">to</span>
+          <input type="time" id="auto-close-time" class="form-control" style="flex:1; min-width:100px; padding:6px 10px; font-size:0.85rem;" onchange="saveAutoTimeSetting()">
+        </div>
+        <div id="auto-time-status" style="font-size:0.75rem; color:var(--text-muted); display:none;"></div>
       </div>
     </div>
 
@@ -978,10 +999,22 @@
   }
 
   async function fetchShopStatus() {
-    const { data } = await _supabase.from('store_settings').select('is_open').eq('id', 'shop_status').single();
+    const { data } = await _supabase.from('store_settings').select('*').eq('id', 'shop_status').single();
     if (data) {
       isShopOpen = data.is_open;
       updateShopToggleUI();
+      // Restore auto-time settings
+      const autoToggle = document.getElementById('auto-time-toggle');
+      const rangeDiv   = document.getElementById('auto-time-range');
+      const openInp    = document.getElementById('auto-open-time');
+      const closeInp   = document.getElementById('auto-close-time');
+      if (autoToggle && data.auto_time_enabled) {
+        autoToggle.checked = true;
+        if (rangeDiv) rangeDiv.style.display = 'flex';
+        if (openInp  && data.open_time)  openInp.value  = data.open_time;
+        if (closeInp && data.close_time) closeInp.value = data.close_time;
+        runAutoTimeCheck();
+      }
     }
   }
 
@@ -1002,12 +1035,19 @@
     const text = document.getElementById('shop-status-text');
     if(toggle) toggle.checked = isShopOpen;
     if(text) {
-      text.textContent = isShopOpen ? 'Shop is Open' : 'Shop Closed';
+      text.textContent = isShopOpen ? 'Shop is Open 🟢' : 'Shop Closed 🔴';
       text.style.color = isShopOpen ? '#10b981' : '#ef4444';
     }
   }
 
   async function toggleShopStatus(e) {
+    // If auto-time is enabled, don't allow manual toggle
+    const autoOn = document.getElementById('auto-time-toggle')?.checked;
+    if (autoOn) {
+      showToast('Auto Time is ON — disable it first to manually control the shop.', 'warning');
+      e.target.checked = isShopOpen; // revert UI
+      return;
+    }
     const newVal = e.target.checked;
     isShopOpen = newVal;
     updateShopToggleUI();
@@ -1018,6 +1058,84 @@
       updateShopToggleUI();
     } else {
       showToast(newVal ? 'Shop is now OPEN' : 'Shop is now CLOSED', 'success');
+    }
+  }
+
+  // ---- Auto Time Logic ----
+  let _autoTimeTimer = null;
+
+  async function saveAutoTimeSetting() {
+    const autoOn    = document.getElementById('auto-time-toggle').checked;
+    const openTime  = document.getElementById('auto-open-time').value;
+    const closeTime = document.getElementById('auto-close-time').value;
+    const rangeDiv  = document.getElementById('auto-time-range');
+    const statusDiv = document.getElementById('auto-time-status');
+
+    // Show/hide the time picker
+    if (rangeDiv) rangeDiv.style.display = autoOn ? 'flex' : 'none';
+    if (statusDiv) statusDiv.style.display = autoOn ? 'block' : 'none';
+
+    // Persist to DB
+    await _supabase.from('store_settings').update({
+      auto_time_enabled: autoOn,
+      open_time:  openTime  || null,
+      close_time: closeTime || null
+    }).eq('id', 'shop_status');
+
+    if (autoOn) {
+      runAutoTimeCheck();
+    } else {
+      if (_autoTimeTimer) { clearInterval(_autoTimeTimer); _autoTimeTimer = null; }
+      if (statusDiv) statusDiv.style.display = 'none';
+      showToast('Auto Time disabled. Manual toggle is now active.', 'success');
+    }
+  }
+
+  function runAutoTimeCheck() {
+    _applyAutoTime(); // run immediately
+    if (_autoTimeTimer) clearInterval(_autoTimeTimer);
+    _autoTimeTimer = setInterval(_applyAutoTime, 60000); // re-check every minute
+  }
+
+  async function _applyAutoTime() {
+    const autoOn    = document.getElementById('auto-time-toggle')?.checked;
+    if (!autoOn) return;
+
+    const openVal  = document.getElementById('auto-open-time')?.value;
+    const closeVal = document.getElementById('auto-close-time')?.value;
+    const statusDiv = document.getElementById('auto-time-status');
+
+    if (!openVal || !closeVal) return;
+
+    const now = new Date();
+    const [oh, om] = openVal.split(':').map(Number);
+    const [ch, cm] = closeVal.split(':').map(Number);
+
+    const nowMins   = now.getHours() * 60 + now.getMinutes();
+    const openMins  = oh * 60 + om;
+    const closeMins = ch * 60 + cm;
+
+    let shouldBeOpen;
+    // Handle overnight ranges e.g. 22:00 to 02:00
+    if (openMins <= closeMins) {
+      shouldBeOpen = nowMins >= openMins && nowMins < closeMins;
+    } else {
+      shouldBeOpen = nowMins >= openMins || nowMins < closeMins;
+    }
+
+    if (statusDiv) {
+      const pad = n => String(n).padStart(2, '0');
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = shouldBeOpen
+        ? `✅ Auto: Open until ${pad(ch)}:${pad(cm)}`
+        : `❌ Auto: Closed. Opens at ${pad(oh)}:${pad(om)}`;
+    }
+
+    // Only write to DB if state actually needs to change
+    if (shouldBeOpen !== isShopOpen) {
+      isShopOpen = shouldBeOpen;
+      updateShopToggleUI();
+      await _supabase.from('store_settings').update({ is_open: shouldBeOpen }).eq('id', 'shop_status');
     }
   }
   // ---- Discounts ----
