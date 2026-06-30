@@ -23,9 +23,31 @@ const { test, expect } = require('@playwright/test');
 const { getAdminSession, getUserSession, injectSession } = require('./helpers/auth');
 const { gotoReady } = require('./helpers/navigation');
 
+async function gotoAdmin(page) {
+  await gotoReady(page, '/admin.html');
+  await expect(page.locator('#admin-main')).toBeVisible({ timeout: 15_000 });
+}
+
+async function waitForProductsPanel(page) {
+  await page.locator('#products-loading').waitFor({ state: 'hidden', timeout: 15_000 });
+  await page.locator('#products-table-wrap:visible, #products-empty:visible').waitFor({ timeout: 15_000 });
+}
+
+async function waitForOrdersPanel(page) {
+  await page.locator('#orders-loading').waitFor({ state: 'hidden', timeout: 15_000 });
+  await page.locator('#orders-table-wrap:visible, #orders-empty:visible').waitFor({ timeout: 15_000 });
+}
+
+async function waitForDiscountsPanel(page) {
+  await page.locator('#discounts-loading').waitFor({ state: 'hidden', timeout: 15_000 });
+  await page.locator('#discounts-table-wrap:visible, #discounts-empty:visible').waitFor({ timeout: 15_000 });
+}
+
 // Skip these tests if TEST_SUPABASE_SERVICE_ROLE_KEY is not set
 // (e.g. running locally without the test DB configured)
 test.describe('Tier 3 — Admin Flow', () => {
+  test.describe.configure({ mode: 'serial' });
+
   test.skip(
     !process.env.TEST_SUPABASE_SERVICE_ROLE_KEY,
     'Skipping: TEST_SUPABASE_SERVICE_ROLE_KEY not set'
@@ -40,21 +62,22 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Admin Dashboard Loads ──────────────────────────────
   test('admin dashboard loads all main sections', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
     // All four stat cards should be present
-    await expect(page.locator('.stat-card, [class*="stat"]').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('#stats-grid .stat-card').first()).toBeVisible({ timeout: 10000 });
 
     // Navigation tabs
-    await expect(page.locator(':text("Products"), :text("Orders")').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#tab-products')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#tab-orders')).toBeVisible({ timeout: 5000 });
   });
 
   test('stats grid shows numeric values (not blank)', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
     // Stats should have loaded with actual numbers
-    const statValues = page.locator('.stat-value, [class*="stat-num"]');
+    const statValues = page.locator('#stats-grid .stat-value');
     const count = await statValues.count();
     expect(count).toBeGreaterThan(0);
   });
@@ -62,7 +85,7 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Shop Status Toggle ─────────────────────────────────
   test('shop open/close toggle is present and clickable', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
     const shopToggle = page.locator('#shop-toggle');
     await expect(shopToggle).toBeAttached({ timeout: 8000 });
@@ -71,7 +94,7 @@ test.describe('Tier 3 — Admin Flow', () => {
     const initialChecked = await shopToggle.isChecked();
 
     // Toggle it
-    await shopToggle.click();
+    await page.locator('label.switch').click();
     await page.waitForTimeout(2000);
 
     // Should have changed
@@ -79,65 +102,61 @@ test.describe('Tier 3 — Admin Flow', () => {
     expect(newChecked).toBe(!initialChecked);
 
     // Toggle back to restore state
-    await shopToggle.click();
+    await page.locator('label.switch').click();
     await page.waitForTimeout(1000);
   });
 
   // ─── Products Tab ───────────────────────────────────────
   test('products tab loads product list', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
+    await waitForProductsPanel(page);
 
     // Click Products tab
-    const productsTab = page.locator('button:has-text("Products"), [data-tab="products"], #tab-products').first();
+    const productsTab = page.locator('#tab-products');
     await productsTab.click();
-    await page.waitForTimeout(3000);
+    await waitForProductsPanel(page);
 
     // Product list should have at least the seeded test product
-    const productItems = page.locator('.product-card, .product-item, [class*="product-row"], tr').first();
-    await expect(productItems).toBeVisible({ timeout: 8000 });
+    await expect(page.locator('#products-tbody tr').first()).toBeVisible({ timeout: 8000 });
   });
 
   test('can open add product form', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
     // Click Products tab
-    await page.locator('button:has-text("Products"), [data-tab="products"], #tab-products').first().click();
-    await page.waitForTimeout(1000);
+    await page.locator('#tab-products').click();
+    await waitForProductsPanel(page);
 
     // Click Add Product button
-    const addBtn = page.locator('button:has-text("Add"), button:has-text("New Product"), #add-product-btn').first();
+    const addBtn = page.locator('#panel-products .section-header button:has-text("Add Product")');
     await addBtn.click();
-    await page.waitForTimeout(500);
 
     // A form or modal should appear
-    await expect(
-      page.locator('input[placeholder*="name" i], input[name="name"], #product-name').first()
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#product-modal.open #p-name')).toBeVisible({ timeout: 5000 });
   });
 
   // ─── Orders Tab ─────────────────────────────────────────
   test('orders tab loads order table', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
     // Click Orders tab
-    const ordersTab = page.locator('button:has-text("Orders"), [data-tab="orders"], #tab-orders').first();
+    const ordersTab = page.locator('#tab-orders');
     await ordersTab.click();
-    await page.waitForTimeout(3000);
+    await waitForOrdersPanel(page);
 
     // Either shows orders table or "no orders" empty state
-    const content = page.locator('.order-row, tr, .empty-state, :text("No orders")').first();
-    await expect(content).toBeVisible({ timeout: 8000 });
+    await expect(page.locator('#orders-table-wrap:visible, #orders-empty:visible')).toBeVisible({ timeout: 8000 });
   });
 
   test('order filter buttons exist (All, Pending, Processing, Completed)', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
-    await page.locator('button:has-text("Orders"), [data-tab="orders"], #tab-orders').first().click();
-    await page.waitForTimeout(1000);
+    await page.locator('#tab-orders').click();
+    await waitForOrdersPanel(page);
 
     // Filter buttons
     for (const filter of ['All', 'Pending']) {
@@ -149,12 +168,12 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Discounts Tab ──────────────────────────────────────
   test('discounts tab shows seeded discount codes', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
     // Click Discounts tab
-    const discountTab = page.locator('button:has-text("Discount"), [data-tab="discounts"], #tab-discounts').first();
+    const discountTab = page.locator('#tab-discounts');
     await discountTab.click();
-    await page.waitForTimeout(3000);
+    await waitForDiscountsPanel(page);
 
     // Should show the TESTDEAL50 seeded code
     await expect(page.locator('text=TESTDEAL50')).toBeVisible({ timeout: 8000 });
@@ -162,25 +181,25 @@ test.describe('Tier 3 — Admin Flow', () => {
 
   test('can create a new discount code', async ({ page }) => {
     await injectSession(page, adminSession);
-    await gotoReady(page, '/admin.html');
+    await gotoAdmin(page);
 
-    await page.locator('button:has-text("Discount"), [data-tab="discounts"], #tab-discounts').first().click();
-    await page.waitForTimeout(1000);
+    await page.locator('#tab-discounts').click();
+    await waitForDiscountsPanel(page);
 
     // Fill in new discount form
-    const codeInput = page.locator('input[placeholder*="code" i], input[name="code"], #discount-code').first();
-    await codeInput.fill('CITEST99');
+    const code = `CI${Date.now().toString().slice(-8)}`;
+    const codeInput = page.locator('#new-discount-code');
+    await codeInput.fill(code);
 
-    const amountInput = page.locator('input[placeholder*="amount" i], input[name="amount"], #discount-amount').first();
+    const amountInput = page.locator('#new-discount-amount');
     await amountInput.fill('99');
 
     // Submit
-    const submitBtn = page.locator('button:has-text("Add"), button:has-text("Create"), button[type="submit"]').first();
+    const submitBtn = page.locator('#panel-discounts button:has-text("Add Code")');
     await submitBtn.click();
-    await page.waitForTimeout(3000);
 
     // New code should appear
-    await expect(page.locator('text=CITEST99')).toBeVisible({ timeout: 8000 });
+    await expect(page.locator(`text=${code}`)).toBeVisible({ timeout: 8000 });
   });
 });
 

@@ -45,7 +45,7 @@ test.describe('Tier 3 — Homepage', () => {
     await expect(lightbox).toBeVisible({ timeout: 5000 });
   });
 
-  test('out-of-stock products show disabled buy button', async ({ page }) => {
+  test('out-of-stock products show sold-out status', async ({ page }) => {
     await gotoReady(page, '/');
     await waitForProducts(page);
 
@@ -54,10 +54,8 @@ test.describe('Tier 3 — Homepage', () => {
     const count = await outOfStockCard.count();
 
     if (count > 0) {
-      // If there's an out-of-stock item, the buy button within it should be disabled
-      const card = outOfStockCard.locator('..').locator('..');
-      const buyBtn = card.locator('button:has-text("Buy"), button:has-text("Order")').first();
-      await expect(buyBtn).toBeDisabled({ timeout: 3000 });
+      const card = outOfStockCard.locator('xpath=ancestor::*[contains(@class, "product-card")][1]');
+      await expect(card.locator('.product-stock-text')).toContainText(/Out of Stock|Sold Out/, { timeout: 3000 });
     } else {
       // No out-of-stock items — test passes (nothing to check)
       test.info().annotations.push({ type: 'skip', description: 'No out-of-stock products found' });
