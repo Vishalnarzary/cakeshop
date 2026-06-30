@@ -2,8 +2,19 @@
   "name": "caramel-cheese-cake",
   "version": "1.0.0",
   "description": "Cake Shop static site with Vercel API routes",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke.spec.js",
+    "test:pages": "playwright test tests/pages.spec.js",
+    "test:admin": "playwright test tests/admin-flow.spec.js",
+    "test:user": "playwright test tests/user-flow.spec.js",
+    "test:report": "playwright show-report"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
     "razorpay": "^2.9.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
   }
 }

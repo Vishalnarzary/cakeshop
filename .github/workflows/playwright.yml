@@ -1,0 +1,96 @@
+name: Playwright Tests
+
+# Trigger: Run on every push to any branch, and on every pull request
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  test:
+    name: Run Playwright Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Check out your code ────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Node.js ─────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── 3. Install dependencies ───────────────────────────────
+      - name: Install npm dependencies
+        run: npm ci
+
+      # ── 4. Install Playwright browsers ───────────────────────
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # ── 5. Wait for Vercel to deploy the latest push ─────────
+      #    This polls your Vercel deployment until it's "Ready"
+      - name: Wait for Vercel deployment
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        id: wait-for-vercel
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 300
+          check_interval: 15
+        continue-on-error: true
+        # If this step fails (no Vercel integration), tests still run
+        # against the last known production URL
+
+      # ── 6. Set the target URL for tests ──────────────────────
+      - name: Set site URL
+        run: |
+          if [ -n "${{ steps.wait-for-vercel.outputs.url }}" ]; then
+            echo "SITE_URL=${{ steps.wait-for-vercel.outputs.url }}" >> $GITHUB_ENV
+            echo "Testing against Vercel preview: ${{ steps.wait-for-vercel.outputs.url }}"
+          else
+            echo "SITE_URL=https://caramelcake.vercel.app" >> $GITHUB_ENV
+            echo "Testing against production: https://caramelcake.vercel.app"
+          fi
+
+      # ── 7. Run Playwright tests ───────────────────────────────
+      - name: Run Playwright tests
+        run: npx playwright test
+        env:
+          # Target site URL (set in step 6 above)
+          SITE_URL: ${{ env.SITE_URL }}
+
+          # Test Supabase project credentials
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+
+          # Razorpay Test Mode (optional — skips Razorpay tests if not set)
+          TEST_RAZORPAY_KEY_ID: ${{ secrets.TEST_RAZORPAY_KEY_ID }}
+          TEST_RAZORPAY_KEY_SECRET: ${{ secrets.TEST_RAZORPAY_KEY_SECRET }}
+
+      # ── 8. Upload failure artifacts ───────────────────────────
+      #    If a test fails, GitHub saves the video + screenshot
+      #    as a downloadable artifact on the Actions page
+      - name: Upload test failure artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-failure-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+      # ── 9. Upload full HTML report ────────────────────────────
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-html-report
+          path: playwright-report/
+          retention-days: 7
