@@ -33,26 +33,30 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      # ── 5. Wait for Vercel to deploy the latest push ─────────
-      #    This polls your Vercel deployment until it's "Ready"
-      - name: Wait for Vercel deployment
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
-        id: wait-for-vercel
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 300
-          check_interval: 15
-        continue-on-error: true
-
-      # ── 6. Set the target URL for tests ──────────────────────
-      - name: Set site URL
+      # ── 5. Prepare Local Server with Test Database ────────────
+      # We overwrite supabase.js to ensure the frontend uses
+      # the TEST database credentials instead of production data
+      - name: Inject Test Database Credentials
         run: |
-          echo "SITE_URL=https://caramelcake.in" >> $GITHUB_ENV
-          echo "Testing against production: https://caramelcake.in"
+          cat << 'EOF' > supabase.js
+          const SUPABASE_URL = '${{ secrets.TEST_SUPABASE_URL }}';
+          const SUPABASE_ANON_KEY = '${{ secrets.TEST_SUPABASE_ANON_KEY }}';
+          const { createClient } = supabase;
+          const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          EOF
+          
+          # We use localhost for tests to avoid polluting production
+          echo "SITE_URL=http://localhost:3000" >> $GITHUB_ENV
 
-      # ── 7. Run Playwright tests ───────────────────────────────
+      # ── 6. Run Playwright tests ───────────────────────────────
       - name: Run Playwright tests
-        run: npx playwright test
+        run: |
+          # Start a static file server in the background
+          npx serve . -p 3000 &
+          # Give it a second to start
+          sleep 2
+          # Run the tests against the local server
+          npx playwright test
         env:
           # Target site URL (set in step 6 above)
           SITE_URL: ${{ env.SITE_URL }}
