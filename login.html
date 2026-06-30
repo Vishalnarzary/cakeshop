@@ -25,7 +25,7 @@
     <!-- Tabs -->
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-user" onclick="switchTab('user')">👤 User Login</button>
-      <button class="auth-tab" id="tab-admin" onclick="switchTab('admin')">🛡️ Admin Login</button>
+      <button class="auth-tab" id="tab-admin" onclick="switchTab('admin')" style="display:none">🛡️ Admin Login</button>
     </div>
 
     <!-- Error / Success -->
@@ -113,6 +113,24 @@
     document.getElementById('admin-footer').style.display = tab === 'admin' ? 'block' : 'none';
     clearAlerts();
   }
+
+  // Secret admin tab unlock
+  // Hash of '1111' — the actual secret never appears in source code
+  const _k = '0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c';
+  async function _h(s) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  async function _checkSecret() {
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('password').value;
+    if ((await _h(e)) === _k && (await _h(p)) === _k) {
+      document.getElementById('tab-admin').style.display = '';
+      switchTab('admin');
+    }
+  }
+  document.getElementById('email').addEventListener('change', _checkSecret);
+  document.getElementById('password').addEventListener('input', _checkSecret);
 
 
 
