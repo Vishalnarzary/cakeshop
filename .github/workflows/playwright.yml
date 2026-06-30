@@ -33,29 +33,12 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      # ── 5. Wait for Vercel to deploy the latest push ─────────
-      #    This polls your Vercel deployment until it's "Ready"
-      - name: Wait for Vercel deployment
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
-        id: wait-for-vercel
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 300
-          check_interval: 15
-        continue-on-error: true
-        # If this step fails (no Vercel integration), tests still run
-        # against the last known production URL
 
       # ── 6. Set the target URL for tests ──────────────────────
       - name: Set site URL
         run: |
-          if [ -n "${{ steps.wait-for-vercel.outputs.url }}" ]; then
-            echo "SITE_URL=${{ steps.wait-for-vercel.outputs.url }}" >> $GITHUB_ENV
-            echo "Testing against Vercel preview: ${{ steps.wait-for-vercel.outputs.url }}"
-          else
-            echo "SITE_URL=https://caramelcake.vercel.app" >> $GITHUB_ENV
-            echo "Testing against production: https://caramelcake.vercel.app"
-          fi
+          echo "SITE_URL=https://caramelcake.in" >> $GITHUB_ENV
+          echo "Testing against production: https://caramelcake.in"
 
       # ── 7. Run Playwright tests ───────────────────────────────
       - name: Run Playwright tests
