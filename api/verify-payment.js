@@ -1,6 +1,10 @@
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
+function isMalformedBearerToken(token) {
+  return !token || token === 'undefined' || token.split('.').length !== 3;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
@@ -17,7 +21,11 @@ export default async function handler(req, res) {
   if (!authHeader) return res.status(401).json({ message: 'Missing Authorization header' });
   const token = authHeader.replace('Bearer ', '');
 
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (isMalformedBearerToken(token)) {
+    return res.status(401).json({ message: 'Invalid Authorization token' });
+  }
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_ANON_KEY) {
     return res.status(500).json({ message: 'Server misconfiguration: Missing Supabase credentials' });
   }
 
@@ -29,9 +37,6 @@ export default async function handler(req, res) {
   });
 
   try {
-    if (token === 'undefined' || !token) {
-        return res.status(401).json({ message: 'No valid token provided. Please log out and log back in.' });
-    }
     const { data: { user }, error: authError } = await authClient.auth.getUser(token);
     if (authError || !user) {
         return res.status(401).json({ message: `Auth Error: ${authError?.message || 'User not found'}. Please log out and log back in.` });

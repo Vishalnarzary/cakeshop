@@ -20,7 +20,8 @@
  */
 
 const { test, expect } = require('@playwright/test');
-const { getAdminSession, getUserSession, injectSession, SITE_URL } = require('./helpers/auth');
+const { getAdminSession, getUserSession, injectSession } = require('./helpers/auth');
+const { gotoReady } = require('./helpers/navigation');
 
 // Skip these tests if TEST_SUPABASE_SERVICE_ROLE_KEY is not set
 // (e.g. running locally without the test DB configured)
@@ -39,8 +40,7 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Admin Dashboard Loads ──────────────────────────────
   test('admin dashboard loads all main sections', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     // All four stat cards should be present
     await expect(page.locator('.stat-card, [class*="stat"]').first()).toBeVisible({ timeout: 10000 });
@@ -51,9 +51,7 @@ test.describe('Tier 3 — Admin Flow', () => {
 
   test('stats grid shows numeric values (not blank)', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
+    await gotoReady(page, '/admin.html');
 
     // Stats should have loaded with actual numbers
     const statValues = page.locator('.stat-value, [class*="stat-num"]');
@@ -64,8 +62,7 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Shop Status Toggle ─────────────────────────────────
   test('shop open/close toggle is present and clickable', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     const shopToggle = page.locator('#shop-toggle');
     await expect(shopToggle).toBeAttached({ timeout: 8000 });
@@ -89,8 +86,7 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Products Tab ───────────────────────────────────────
   test('products tab loads product list', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     // Click Products tab
     const productsTab = page.locator('button:has-text("Products"), [data-tab="products"], #tab-products').first();
@@ -104,8 +100,7 @@ test.describe('Tier 3 — Admin Flow', () => {
 
   test('can open add product form', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     // Click Products tab
     await page.locator('button:has-text("Products"), [data-tab="products"], #tab-products').first().click();
@@ -125,8 +120,7 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Orders Tab ─────────────────────────────────────────
   test('orders tab loads order table', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     // Click Orders tab
     const ordersTab = page.locator('button:has-text("Orders"), [data-tab="orders"], #tab-orders').first();
@@ -140,8 +134,7 @@ test.describe('Tier 3 — Admin Flow', () => {
 
   test('order filter buttons exist (All, Pending, Processing, Completed)', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     await page.locator('button:has-text("Orders"), [data-tab="orders"], #tab-orders').first().click();
     await page.waitForTimeout(1000);
@@ -156,8 +149,7 @@ test.describe('Tier 3 — Admin Flow', () => {
   // ─── Discounts Tab ──────────────────────────────────────
   test('discounts tab shows seeded discount codes', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     // Click Discounts tab
     const discountTab = page.locator('button:has-text("Discount"), [data-tab="discounts"], #tab-discounts').first();
@@ -170,8 +162,7 @@ test.describe('Tier 3 — Admin Flow', () => {
 
   test('can create a new discount code', async ({ page }) => {
     await injectSession(page, adminSession);
-    await page.goto('/admin.html');
-    await page.waitForLoadState('networkidle');
+    await gotoReady(page, '/admin.html');
 
     await page.locator('button:has-text("Discount"), [data-tab="discounts"], #tab-discounts').first().click();
     await page.waitForTimeout(1000);
@@ -204,8 +195,7 @@ test.describe('Tier 3 — Role Security', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto('/admin.html');
-    await page.waitForLoadState('domcontentloaded');
+    await gotoReady(page, '/admin.html');
     await page.waitForTimeout(3000);
 
     // Should be redirected to login or show access denied

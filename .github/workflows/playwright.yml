@@ -52,16 +52,12 @@ jobs:
       - name: Run Playwright tests
         run: |
           # Start a static file server in the background
-          npx serve . -p 3000 &
+          npx --yes serve . -p 3000 &
           # Give it a second to start
           sleep 2
           # Run the tests against the local server
           npx playwright test
         env:
-          # Target site URL (set in step 6 above)
-          SITE_URL: ${{ env.SITE_URL }}
-
-          # Test Supabase project credentials
           TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
           TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
           TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}

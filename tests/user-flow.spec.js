@@ -16,15 +16,15 @@
 
 const { test, expect } = require('@playwright/test');
 const { getUserSession, injectSession } = require('./helpers/auth');
+const { gotoReady, waitForProducts } = require('./helpers/navigation');
 
 const TEST_PRODUCT_ID = '11111111-1111-1111-1111-111111111111';
 
 // ─── Homepage User Flow ───────────────────────────────────────
 test.describe('Tier 3 — Homepage', () => {
   test('loads product cards from database', async ({ page }) => {
-    await page.goto('/');
-    // Wait for products to load (they come from Supabase)
-    await page.waitForTimeout(4000);
+    await gotoReady(page, '/');
+    await waitForProducts(page);
 
     // There should be at least one product card visible
     const cards = page.locator('.product-card, [class*="product"], .cake-card');
@@ -33,8 +33,8 @@ test.describe('Tier 3 — Homepage', () => {
   });
 
   test('clicking a product card opens the lightbox', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(4000);
+    await gotoReady(page, '/');
+    await waitForProducts(page);
 
     // Click the first product card
     const firstCard = page.locator('.product-card, [class*="product-card"]').first();
@@ -46,8 +46,8 @@ test.describe('Tier 3 — Homepage', () => {
   });
 
   test('out-of-stock products show disabled buy button', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(4000);
+    await gotoReady(page, '/');
+    await waitForProducts(page);
 
     // Find a card with "Out of Stock" or "0" quantity
     const outOfStockCard = page.locator('text=Out of Stock').first();
@@ -68,7 +68,7 @@ test.describe('Tier 3 — Homepage', () => {
     // This test is informational — checks if the shop-closed UI works
     // We don't actually close the shop here (that would affect production)
     // Instead we verify the UI element exists in the DOM
-    await page.goto('/');
+    await gotoReady(page, '/');
     await page.waitForLoadState('domcontentloaded');
 
     // The shop-closed overlay or banner element should exist in the DOM
@@ -94,9 +94,7 @@ test.describe('Tier 3 — Orders Page (Authenticated)', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto('/orders.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
+    await gotoReady(page, '/orders.html');
 
     // Should NOT redirect to login
     expect(page.url()).not.toContain('login.html');
@@ -118,9 +116,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto(`/buy.html?product=${TEST_PRODUCT_ID}`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
+    await gotoReady(page, `/buy.html?product=${TEST_PRODUCT_ID}`);
 
     // Should NOT redirect to login
     expect(page.url()).not.toContain('login.html');
@@ -135,8 +131,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto(`/buy.html?product=${TEST_PRODUCT_ID}`);
-    await page.waitForTimeout(4000);
+    await gotoReady(page, `/buy.html?product=${TEST_PRODUCT_ID}`);
 
     // Price should be visible (₹500)
     await expect(page.locator('text=500').first()).toBeVisible({ timeout: 5000 });
@@ -152,8 +147,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto(`/buy.html?product=${TEST_PRODUCT_ID}`);
-    await page.waitForTimeout(4000);
+    await gotoReady(page, `/buy.html?product=${TEST_PRODUCT_ID}`);
 
     // Find discount input field
     const discountInput = page.locator(
@@ -181,8 +175,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto(`/buy.html?product=${TEST_PRODUCT_ID}`);
-    await page.waitForTimeout(4000);
+    await gotoReady(page, `/buy.html?product=${TEST_PRODUCT_ID}`);
 
     const discountInput = page.locator(
       'input[placeholder*="discount" i], input[placeholder*="code" i], #discount-input'
@@ -210,8 +203,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto(`/buy.html?product=${TEST_PRODUCT_ID}`);
-    await page.waitForTimeout(4000);
+    await gotoReady(page, `/buy.html?product=${TEST_PRODUCT_ID}`);
 
     const discountInput = page.locator(
       'input[placeholder*="discount" i], input[placeholder*="code" i], #discount-input'
@@ -239,8 +231,7 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
     const userSession = await getUserSession();
     await injectSession(page, userSession);
 
-    await page.goto(`/buy.html?product=${TEST_PRODUCT_ID}`);
-    await page.waitForTimeout(4000);
+    await gotoReady(page, `/buy.html?product=${TEST_PRODUCT_ID}`);
 
     // The Pay / Place Order button must exist and be visible
     const payBtn = page.locator(
