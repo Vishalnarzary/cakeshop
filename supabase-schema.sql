@@ -104,7 +104,8 @@ CREATE TABLE IF NOT EXISTS public.discount_codes (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.store_settings (
   id          TEXT PRIMARY KEY,
-  is_open     BOOLEAN DEFAULT true
+  is_open     BOOLEAN DEFAULT true,
+  announcement TEXT DEFAULT ''
 );
 
 -- ============================================================

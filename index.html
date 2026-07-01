@@ -497,6 +497,8 @@
     </div>
 
     <div class="product-grid" id="product-grid" style="display:none"></div>
+    
+    <div id="store-announcement-container" class="store-announcement" style="display:none;"></div>
   </div>
 </section>
 
@@ -878,6 +880,13 @@ function subscribeToProductUpdates() {
       { event: 'UPDATE', schema: 'public', table: 'store_settings', filter: 'id=eq.shop_status' },
       ({ new: updated }) => {
         isShopOpen = updated.is_open;
+        if (updated.announcement) {
+          const annContainer = document.getElementById('store-announcement-container');
+          annContainer.textContent = updated.announcement;
+          annContainer.style.display = 'block';
+        } else {
+          document.getElementById('store-announcement-container').style.display = 'none';
+        }
         // Re-render grid to update button states
         if (globalProducts && globalProducts.length > 0) {
           const grid = document.getElementById('product-grid');
@@ -895,8 +904,15 @@ async function loadProducts() {
   await _supabase.rpc('cleanup_expired_reservations');
 
   const { data: settings } = await _supabase
-    .from('store_settings').select('is_open').eq('id', 'shop_status').single();
-  if (settings) isShopOpen = settings.is_open;
+    .from('store_settings').select('is_open, announcement').eq('id', 'shop_status').single();
+  if (settings) {
+    isShopOpen = settings.is_open;
+    if (settings.announcement) {
+      const annContainer = document.getElementById('store-announcement-container');
+      annContainer.textContent = settings.announcement;
+      annContainer.style.display = 'block';
+    }
+  }
 
   const { data: products, error } = await _supabase
     .from('products').select('*').order('price', { ascending: true });

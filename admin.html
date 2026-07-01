@@ -362,6 +362,7 @@
       <button class="admin-tab active" id="tab-products" onclick="showTab('products')">📦 Products</button>
       <button class="admin-tab" id="tab-orders" onclick="showTab('orders')">🛒 Orders</button>
       <button class="admin-tab" id="tab-discounts" onclick="showTab('discounts')">🏷️ Discounts</button>
+      <button class="admin-tab" id="tab-settings" onclick="showTab('settings')">⚙️ Settings</button>
     </div>
 
     <!-- Products Tab -->
@@ -476,6 +477,25 @@
           <div style="text-align:right;">Action</div>
         </div>
         <div id="discounts-list"></div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="panel-settings" style="display:none">
+      <div class="section-header fade-up">
+        <h2>Store Settings</h2>
+        <span style="font-size:0.8rem;color:var(--text-secondary);">Manage global store configurations</span>
+      </div>
+
+      <div style="background:var(--bg-card); padding:24px; border-radius:var(--radius-lg); border:1px solid var(--border-glass); margin-bottom: 24px;" class="fade-up">
+        <h3 style="margin-top:0; margin-bottom:16px;">Store Announcement</h3>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:16px;">
+          This text will appear just below the product listing on the homepage. Leave empty to hide.
+        </p>
+        <div class="form-group">
+          <textarea id="store-announcement" class="form-control" rows="3" placeholder="e.g. Free shipping on all orders over ₹1000!"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveAnnouncement()" id="btn-save-announcement">Apply Announcement</button>
       </div>
     </div>
 
@@ -979,10 +999,13 @@
   }
 
   async function fetchShopStatus() {
-    const { data } = await _supabase.from('store_settings').select('is_open').eq('id', 'shop_status').single();
+    const { data } = await _supabase.from('store_settings').select('is_open, announcement').eq('id', 'shop_status').single();
     if (data) {
       isShopOpen = data.is_open;
       updateShopToggleUI();
+      if (data.announcement) {
+        document.getElementById('store-announcement').value = data.announcement;
+      }
     }
   }
 
@@ -1019,6 +1042,26 @@
       updateShopToggleUI();
     } else {
       showToast(newVal ? 'Shop is now OPEN' : 'Shop is now CLOSED', 'success');
+    }
+  }
+
+  // ---- Store Settings ----
+  async function saveAnnouncement() {
+    const text = document.getElementById('store-announcement').value.trim();
+    const btn = document.getElementById('btn-save-announcement');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    const { error } = await _supabase.from('store_settings').update({ announcement: text }).eq('id', 'shop_status');
+    
+    btn.disabled = false;
+    btn.textContent = 'Apply Announcement';
+
+    if (error) {
+      showToast('Failed to update announcement', 'error');
+      console.error(error);
+    } else {
+      showToast('Announcement updated successfully', 'success');
     }
   }
 
