@@ -999,7 +999,7 @@
   }
 
   async function fetchShopStatus() {
-    const { data } = await _supabase.from('store_settings').select('is_open, announcement').eq('id', 'shop_status').single();
+    const { data } = await _supabase.from('store_settings').select('*').eq('id', 'shop_status').single();
     if (data) {
       isShopOpen = data.is_open;
       updateShopToggleUI();

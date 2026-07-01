@@ -9,9 +9,9 @@ TRUNCATE public.orders, public.stock_reservations, public.addresses,
          public.discount_codes, public.products, public.store_settings RESTART IDENTITY CASCADE;
 
 -- 2. Store Settings (shop must be open for checkout tests)
-INSERT INTO public.store_settings (id, is_open)
-VALUES ('shop_status', true)
-ON CONFLICT (id) DO UPDATE SET is_open = true;
+INSERT INTO public.store_settings (id, is_open, announcement)
+VALUES ('shop_status', true, '')
+ON CONFLICT (id) DO UPDATE SET is_open = true, announcement = '';
 
 -- 3. Seed test product (known UUID so tests can reference it)
 INSERT INTO public.products (id, name, description, price, quantity, emoji)

@@ -904,7 +904,7 @@ async function loadProducts() {
   await _supabase.rpc('cleanup_expired_reservations');
 
   const { data: settings } = await _supabase
-    .from('store_settings').select('is_open, announcement').eq('id', 'shop_status').single();
+    .from('store_settings').select('*').eq('id', 'shop_status').single();
   if (settings) {
     isShopOpen = settings.is_open;
     if (settings.announcement) {
