@@ -70,6 +70,7 @@ test.describe('Tier 3 — Admin Flow', () => {
     // Navigation tabs
     await expect(page.locator('#tab-products')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('#tab-orders')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#tab-settings')).toBeVisible({ timeout: 5000 });
   });
 
   test('stats grid shows numeric values (not blank)', async ({ page }) => {
@@ -200,6 +201,17 @@ test.describe('Tier 3 — Admin Flow', () => {
 
     // New code should appear
     await expect(page.locator(`text=${code}`)).toBeVisible({ timeout: 8000 });
+  });
+
+  test('settings tab shows announcement controls', async ({ page }) => {
+    await injectSession(page, adminSession);
+    await gotoAdmin(page);
+
+    await page.locator('#tab-settings').click();
+
+    await expect(page.locator('#panel-settings')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#store-announcement')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#btn-save-announcement')).toBeVisible({ timeout: 5000 });
   });
 });
 
