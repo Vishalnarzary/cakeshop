@@ -7,6 +7,14 @@ const requiredSecrets = [
 const errors = [];
 let parsedSupabaseUrl;
 
+function annotateError(message) {
+  const escaped = message
+    .replace(/%/g, '%25')
+    .replace(/\r/g, '%0D')
+    .replace(/\n/g, '%0A');
+  console.error(`::error title=Playwright CI configuration::${escaped}`);
+}
+
 for (const name of requiredSecrets) {
   if (!process.env[name]) {
     errors.push(`${name} is missing`);
@@ -83,6 +91,7 @@ function finish() {
 
   console.error('Playwright CI configuration is invalid:');
   for (const error of errors) {
+    annotateError(error);
     console.error(`- ${error}`);
   }
   process.exit(1);
