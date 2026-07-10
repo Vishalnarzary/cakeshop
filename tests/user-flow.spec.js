@@ -105,6 +105,8 @@ test.describe('Tier 3 — Orders Page (Authenticated)', () => {
 
 // ─── Checkout Page (Buy Flow) ─────────────────────────────────
 test.describe('Tier 3 — Checkout (Buy Page)', () => {
+  test.describe.configure({ mode: 'serial' });
+
   test.skip(
     !process.env.TEST_SUPABASE_SERVICE_ROLE_KEY,
     'Skipping: TEST_SUPABASE_SERVICE_ROLE_KEY not set'
