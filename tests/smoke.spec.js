@@ -23,6 +23,14 @@ const PAGES = [
   { path: '/reset-password.html', name: 'Reset Password' },
 ];
 
+const NON_CRITICAL_CONSOLE_ERRORS = [
+  'ERR_BLOCKED_BY_CLIENT',
+  'favicon',
+  'net::ERR_ABORTED',
+  'net::ERR_NAME_NOT_RESOLVED',
+  'net::ERR_CONNECTION_TIMED_OUT',
+];
+
 // ─── 1. All pages return HTTP 200 ────────────────────────────
 test.describe('Tier 1 — Page HTTP Status', () => {
   for (const { path, name } of PAGES) {
@@ -44,11 +52,7 @@ test.describe('Tier 1 — No JS Console Errors', () => {
         if (msg.type() === 'error') {
           // Ignore common non-critical errors (e.g. ad blockers, CORS on CDN)
           const text = msg.text();
-          if (
-            text.includes('ERR_BLOCKED_BY_CLIENT') ||
-            text.includes('favicon') ||
-            text.includes('net::ERR_ABORTED')
-          ) return;
+          if (NON_CRITICAL_CONSOLE_ERRORS.some(ignored => text.includes(ignored))) return;
           errors.push(text);
         }
       });

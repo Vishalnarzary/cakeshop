@@ -33,20 +33,25 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Validate test database secrets
+        run: node scripts/validate-ci-config.js
+        env:
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+
       # ── 5. Prepare Local Server with Test Database ────────────
       # We overwrite supabase.js to ensure the frontend uses
       # the TEST database credentials instead of production data
       - name: Inject Test Database Credentials
         run: |
-          cat << 'EOF' > supabase.js
-          const SUPABASE_URL = '${{ secrets.TEST_SUPABASE_URL }}';
-          const SUPABASE_ANON_KEY = '${{ secrets.TEST_SUPABASE_ANON_KEY }}';
-          const { createClient } = supabase;
-          const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          EOF
+          node scripts/write-test-supabase-config.js
           
           # We use localhost for tests to avoid polluting production
           echo "SITE_URL=http://localhost:3000" >> $GITHUB_ENV
+        env:
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
 
       # ── 6. Run Playwright tests ───────────────────────────────
       - name: Run Playwright tests
