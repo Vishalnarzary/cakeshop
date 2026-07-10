@@ -133,6 +133,8 @@ test.describe('Tier 3 — Checkout (Buy Page)', () => {
 
     // Price should be visible (₹500)
     await expect(page.locator('text=500').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=30 mins to 4 hr')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=4 hr to 8 hr')).toBeVisible({ timeout: 5000 });
 
     // Timer should be visible (10:00 countdown)
     const timer = page.locator('[id*="timer"], [class*="timer"], :text("remaining")').first();

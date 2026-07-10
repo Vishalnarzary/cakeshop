@@ -317,7 +317,7 @@
           <input type="radio" name="delivery-speed" value="instant" checked onchange="selectSpeed('instant')" style="margin-top:4px; accent-color:var(--accent-blue-light);">
           <div style="flex:1;">
             <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:2px;">Instant delivery</div>
-            <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">Fastest option at the normal delivery rate (20-30 mins)</div>
+            <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">Fastest option at the normal delivery rate (30 mins to 4 hr)</div>
           </div>
           <div style="font-weight:700; font-size:0.95rem; color:#fff;" id="speed-price-instant">₹—</div>
         </label>
@@ -325,7 +325,7 @@
         <label class="speed-option" style="display:flex; align-items:flex-start; gap:12px; border:1px solid var(--border-glass); border-radius:8px; padding:12px 16px; cursor:pointer; transition:var(--transition); position:relative;" id="speed-label-delayed">
           <input type="radio" name="delivery-speed" value="delayed" onchange="selectSpeed('delayed')" style="margin-top:4px; accent-color:var(--accent-blue-light);">
           <div style="flex:1;">
-            <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:2px;">Delivery in 2-4 hours</div>
+            <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:2px;">Delivery in 4 hr to 8 hr</div>
             <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">Lower fee when the order is not urgent</div>
           </div>
           <div style="text-align:right;">
@@ -506,7 +506,7 @@
     instantFee = Math.round(instantFee);
 
     if (speed === 'delayed') {
-      // Step B: Determine 2-4 Hour Delivery Fee
+      // Step B: Determine 4-8 Hour Delivery Fee
       if (instantFee === 0) {
         return 0;
       }

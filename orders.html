@@ -159,11 +159,11 @@
       const orderDate = new Date(order.created_at);
       let minTime, maxTime;
       if (order.delivery_speed === 'delayed') {
-        minTime = new Date(orderDate.getTime() + 2 * 60 * 60000); // +2 hours
-        maxTime = new Date(orderDate.getTime() + 4 * 60 * 60000); // +4 hours
+        minTime = new Date(orderDate.getTime() + 4 * 60 * 60000); // +4 hours
+        maxTime = new Date(orderDate.getTime() + 8 * 60 * 60000); // +8 hours
       } else {
-        minTime = new Date(orderDate.getTime() + 20 * 60000); // +20 mins
-        maxTime = new Date(orderDate.getTime() + 40 * 60000); // +40 mins
+        minTime = new Date(orderDate.getTime() + 30 * 60000); // +30 mins
+        maxTime = new Date(orderDate.getTime() + 4 * 60 * 60000); // +4 hours
       }
       const formatTime = (d) => d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
       cfg.msg = `Your order will be delivered by ${formatTime(minTime)} to ${formatTime(maxTime)}`;
