@@ -143,6 +143,23 @@ async function getUserSession() {
   return userSessionPromise;
 }
 
+async function cancelTestReservation(userId, productId) {
+  validateTestConfig();
+
+  await retrySupabase('Test reservation cleanup', async () => {
+    const serviceClient = createClient(TEST_SUPABASE_URL, TEST_SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    const { error } = await serviceClient.rpc('cancel_reservation', {
+      p_user_id: userId,
+      p_product_id: productId,
+    });
+
+    if (error) throw new Error(`Reservation cleanup failed: ${error.message}`);
+  });
+}
+
 /**
  * Injects a Supabase session into the Playwright page's localStorage.
  * Call this before page.goto() so the page loads as already logged in.
@@ -167,4 +184,4 @@ async function injectSession(page, session) {
   });
 }
 
-module.exports = { getAdminSession, getUserSession, injectSession, SITE_URL };
+module.exports = { getAdminSession, getUserSession, injectSession, cancelTestReservation, SITE_URL };
